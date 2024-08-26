@@ -11,10 +11,12 @@ import { createReactAgent, ToolNode } from "@langchain/langgraph/prebuilt";
 import { callFinancialDatasetAPI } from "utils.js";
 import {
   Annotation,
+  CompiledStateGraph,
   END,
   messagesStateReducer,
   START,
   StateGraph,
+  StateType,
 } from "@langchain/langgraph";
 import {
   BaseMessage,
@@ -195,14 +197,14 @@ const webSearchTool = new TavilySearchResults({
   maxResults: 2,
 });
 
-function createGraph() {
-  const GraphAnnotation = Annotation.Root({
-    messages: Annotation<BaseMessage[]>({
-      reducer: messagesStateReducer,
-      default: () => [],
-    }),
-  });
+const GraphAnnotation = Annotation.Root({
+  messages: Annotation<BaseMessage[]>({
+    reducer: messagesStateReducer,
+    default: () => [],
+  }),
+});
 
+export function createGraph(): CompiledStateGraph<any, any> {
   const shouldContinue = (
     state: typeof GraphAnnotation.State
   ): "tools" | typeof END => {
@@ -246,42 +248,42 @@ All finical data tools require a company ticker to be passed in as a parameter. 
 
   const workflow = new StateGraph(GraphAnnotation)
     .addNode("agent", agent)
-    .addNode("tools", toolNode)
     .addEdge(START, "agent")
+    .addNode("tools", toolNode)
     .addConditionalEdges("agent", shouldContinue)
     .addEdge("tools", "agent");
 
   return workflow.compile();
 }
 
-async function main() {
-  const app = createGraph();
+// async function main() {
+//   const app = createGraph();
 
-  const stream = await app.stream(
-    {
-      messages: [
-        new HumanMessage(
-          "Give me some facts about Apple, and the current stock price."
-        ),
-      ],
-    },
-    {
-      streamMode: "values",
-    }
-  );
-  for await (const chunk of stream) {
-    const lastMessage = chunk.messages[chunk.messages.length - 1];
-    console.log(
-      `===================== ${lastMessage._getType()} =====================`
-    );
-    console.dir(
-      {
-        content: lastMessage.content,
-        toolCalls: lastMessage.tool_calls,
-      },
-      { depth: null }
-    );
-  }
-}
+//   const stream = await app.stream(
+//     {
+//       messages: [
+//         new HumanMessage(
+//           "Give me some facts about Apple, and the current stock price."
+//         ),
+//       ],
+//     },
+//     {
+//       streamMode: "values",
+//     }
+//   );
+//   for await (const chunk of stream) {
+//     const lastMessage = chunk.messages[chunk.messages.length - 1];
+//     console.log(
+//       `===================== ${lastMessage._getType()} =====================`
+//     );
+//     console.dir(
+//       {
+//         content: lastMessage.content,
+//         toolCalls: lastMessage.tool_calls,
+//       },
+//       { depth: null }
+//     );
+//   }
+// }
 
-await main();
+// await main();
