@@ -1,0 +1,16 @@
+{
+  "name": "langgraphjs-examples",
+  "author": "Brace Sproul",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "financial-expert",
+    "web"
+  ],
+  "devDependencies": {
+    "turbo": "latest"
+  },
+  "resolutions": {
+    "@langchain/core": "0.2.29"
+  }
+}
