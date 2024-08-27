@@ -64,3 +64,4 @@ package-lock.json
 /lib/
 dist
 .turbo
+.env

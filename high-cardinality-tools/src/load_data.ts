@@ -16,7 +16,7 @@ export async function loadData() {
   const data_2010_2019 = "data/list_of_wars_2010_2019.csv";
   let data_2010_2019_loaded = false;
   const data_2019_present = "data/list_of_wars_2019_present.csv";
-  let data_2019_present_loaded = false
+  let data_2019_present_loaded = false;
 
   const results: WarData[] = [];
 
@@ -73,4 +73,3 @@ export async function loadData() {
 
   return results;
 }
-
