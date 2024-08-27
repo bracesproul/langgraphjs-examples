@@ -11,6 +11,7 @@ import { createReactAgent, ToolNode } from "@langchain/langgraph/prebuilt";
 import { callFinancialDatasetAPI } from "utils.js";
 import {
   Annotation,
+  CompiledStateGraph,
   END,
   messagesStateReducer,
   START,
@@ -252,4 +253,8 @@ const workflow = new StateGraph(GraphAnnotation)
   .addConditionalEdges("agent", shouldContinue)
   .addEdge("tools", "agent");
 
-export const graph = workflow.compile();
+export const graph: CompiledStateGraph<
+  typeof GraphAnnotation.State,
+  Partial<typeof GraphAnnotation.State>,
+  typeof START | "agent" | "tools"
+> = workflow.compile();
