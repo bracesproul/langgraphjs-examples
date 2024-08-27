@@ -1,0 +1,40 @@
+{
+  "name": "high-cardinality-tools",
+  "description": "LangGraph.js example dealing with high cardinality tools.",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "yarn tsc --project tsconfig.json --outDir dist",
+    "start": "tsx --experimental-wasm-modules -r dotenv/config src/index.ts",
+    "lint": "eslint src",
+    "lint:fix": "yarn lint --fix",
+    "format": "prettier --write \"**/*.ts\"",
+    "format:check": "prettier --check \"**/*.ts\""
+  },
+  "author": "Brace Sproul",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/anthropic": "^0.2.15",
+    "@langchain/community": "^0.2.31",
+    "@langchain/core": "^0.2.30",
+    "@langchain/langgraph": "^0.1.2",
+    "@langchain/openai": "^0.2.8",
+    "csv-parser": "^3.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-unused-imports": "^3.0.0",
+    "prettier": "^2.8.3",
+    "tsx": "^3.12.3",
+    "typescript": "^5.0.0"
+  }
+}
