@@ -228,7 +228,7 @@
   dependencies:
     "@langchain/langgraph-checkpoint" "~0.0.1"
 
-"@langchain/langgraph-checkpoint@~0.0.1", "@langchain/langgraph-checkpoint@~0.0.2":
+"@langchain/langgraph-checkpoint@~0.0.1":
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/@langchain/langgraph-checkpoint/-/langgraph-checkpoint-0.0.2.tgz#85d36da808ad08a603e8a8bb3389603811e7a374"
   integrity sha512-4bLncdoFR4+1gDVtA5H4QoSmXsvIGkrsoaDL6LpP58QriNrxjrufbeIF4PP6jcdsPmC0VuE93QeeOOhLUkOXpg==
@@ -242,10 +242,10 @@
   dependencies:
     uuid "^10.0.0"
 
-"@langchain/langgraph@0.1.4-rc.2":
-  version "0.1.4-rc.2"
-  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.1.4-rc.2.tgz#7e987a8d0aca01b151c4bd1b87c23959131d279b"
-  integrity sha512-IGysFMqWyMkI+6Pb3dOp5ByG1iL3jAQs7tsQuO9DbeFjrKcCDsf6hTyzEz3ePzpWANk15/TGWMR07aQiiJ+kPQ==
+"@langchain/langgraph@0.1.4-rc.1":
+  version "0.1.4-rc.1"
+  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.1.4-rc.1.tgz#b9a517357ab3ffa8236f76f54c6e62c93e4d2355"
+  integrity sha512-2oiWkxohgYAkPM1LPPvqKf5PnSJE2tELx+0uX47xTFkIqWUlXtx6Hbteit1TZFIxq5LKh4s0upw6/3faJEjF4A==
   dependencies:
     "@langchain/core" ">=0.2.20 <0.3.0"
     "@langchain/langgraph-checkpoint" "~0.0.3"
@@ -254,13 +254,13 @@
     uuid "^10.0.0"
     zod "^3.23.8"
 
-"@langchain/langgraph@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.1.2.tgz#97ee06938be7d48a24af551f3766e715be3c2d6c"
-  integrity sha512-QYzqNS+bTghVm/7bzyQAGVITon4PFP2lTP6vABzOrbzP31nnYmkHlm6PwH6YPCBcqPTIs1tQwZqRXG4Cc7TSkQ==
+"@langchain/langgraph@0.1.4-rc.2":
+  version "0.1.4-rc.2"
+  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.1.4-rc.2.tgz#7e987a8d0aca01b151c4bd1b87c23959131d279b"
+  integrity sha512-IGysFMqWyMkI+6Pb3dOp5ByG1iL3jAQs7tsQuO9DbeFjrKcCDsf6hTyzEz3ePzpWANk15/TGWMR07aQiiJ+kPQ==
   dependencies:
     "@langchain/core" ">=0.2.20 <0.3.0"
-    "@langchain/langgraph-checkpoint" "~0.0.2"
+    "@langchain/langgraph-checkpoint" "~0.0.3"
     "@langchain/langgraph-checkpoint-sqlite" "~0.0.1"
     double-ended-queue "^2.1.0-0"
     uuid "^10.0.0"
