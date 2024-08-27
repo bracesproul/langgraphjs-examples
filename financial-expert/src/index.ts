@@ -11,20 +11,15 @@ import { createReactAgent, ToolNode } from "@langchain/langgraph/prebuilt";
 import { callFinancialDatasetAPI } from "utils.js";
 import {
   Annotation,
-  CompiledStateGraph,
   END,
   messagesStateReducer,
   START,
   StateGraph,
-  StateType,
 } from "@langchain/langgraph";
-import {
-  BaseMessage,
-  HumanMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
-import { ChatAnthropic } from "@langchain/anthropic";
+import { BaseMessage, SystemMessage } from "@langchain/core/messages";
+// import { ChatAnthropic } from "@langchain/anthropic";
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { ChatOpenAI } from "@langchain/openai";
 
 const incomeStatementsTool = tool(
   async (input) => {
@@ -204,86 +199,57 @@ const GraphAnnotation = Annotation.Root({
   }),
 });
 
-export function createGraph(): CompiledStateGraph<any, any> {
-  const shouldContinue = (
-    state: typeof GraphAnnotation.State
-  ): "tools" | typeof END => {
-    const { messages } = state;
-    const lastMessage = messages[messages.length - 1];
-    if (
-      "tool_calls" in lastMessage &&
-      Array.isArray(lastMessage.tool_calls) &&
-      lastMessage.tool_calls?.length
-    ) {
-      return "tools";
-    }
-    return END;
-  };
+const shouldContinue = (
+  state: typeof GraphAnnotation.State
+): "tools" | typeof END => {
+  const { messages } = state;
+  const lastMessage = messages[messages.length - 1];
+  if (
+    "tool_calls" in lastMessage &&
+    Array.isArray(lastMessage.tool_calls) &&
+    lastMessage.tool_calls?.length
+  ) {
+    return "tools";
+  }
+  return END;
+};
 
-  const llm = new ChatAnthropic({
-    model: "claude-3-5-sonnet-20240620",
-    temperature: 0,
-  });
+// LangGraph Studio fails to stream with Anthropic.
+// const llm = new ChatAnthropic({
+//   model: "claude-3-5-sonnet-20240620",
+//   temperature: 0,
+// });
+const llm = new ChatOpenAI({
+  model: "gpt-4o",
+  temperature: 0,
+});
 
-  const tools = [
-    incomeStatementsTool,
-    balanceSheetsTool,
-    cashFlowStatementsTool,
-    companyFactsTool,
-    priceSnapshotTool,
-    webSearchTool,
-  ];
+const tools = [
+  incomeStatementsTool,
+  balanceSheetsTool,
+  cashFlowStatementsTool,
+  companyFactsTool,
+  priceSnapshotTool,
+  webSearchTool,
+];
 
-  const systemMessage =
-    new SystemMessage(`You're an expert financial analyst, tasked with answering the users questions about a given company or companies.
+const systemMessage =
+  new SystemMessage(`You're an expert financial analyst, tasked with answering the users questions about a given company or companies.
 You do not have up to date information on the companies, so you much call tools when answering users questions.
 All finical data tools require a company ticker to be passed in as a parameter. If you do not know the ticker, you should use the webs search tool to find it.`);
 
-  const agent = createReactAgent({
-    llm,
-    tools,
-    messageModifier: systemMessage,
-  });
-  const toolNode = new ToolNode<typeof GraphAnnotation.State>(tools);
+const agent = createReactAgent({
+  llm,
+  tools,
+  messageModifier: systemMessage,
+});
+const toolNode = new ToolNode<typeof GraphAnnotation.State>(tools);
 
-  const workflow = new StateGraph(GraphAnnotation)
-    .addNode("agent", agent)
-    .addEdge(START, "agent")
-    .addNode("tools", toolNode)
-    .addConditionalEdges("agent", shouldContinue)
-    .addEdge("tools", "agent");
+const workflow = new StateGraph(GraphAnnotation)
+  .addNode("agent", agent)
+  .addEdge(START, "agent")
+  .addNode("tools", toolNode)
+  .addConditionalEdges("agent", shouldContinue)
+  .addEdge("tools", "agent");
 
-  return workflow.compile();
-}
-
-// async function main() {
-//   const app = createGraph();
-
-//   const stream = await app.stream(
-//     {
-//       messages: [
-//         new HumanMessage(
-//           "Give me some facts about Apple, and the current stock price."
-//         ),
-//       ],
-//     },
-//     {
-//       streamMode: "values",
-//     }
-//   );
-//   for await (const chunk of stream) {
-//     const lastMessage = chunk.messages[chunk.messages.length - 1];
-//     console.log(
-//       `===================== ${lastMessage._getType()} =====================`
-//     );
-//     console.dir(
-//       {
-//         content: lastMessage.content,
-//         toolCalls: lastMessage.tool_calls,
-//       },
-//       { depth: null }
-//     );
-//   }
-// }
-
-// await main();
+export const graph = workflow.compile();
