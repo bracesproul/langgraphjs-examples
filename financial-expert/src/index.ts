@@ -7,7 +7,7 @@ import type {
   IncomeStatementsResponse,
   SnapshotResponse,
 } from "types.js";
-import { createReactAgent, ToolNode } from "@langchain/langgraph/prebuilt";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { callFinancialDatasetAPI } from "utils.js";
 import {
   Annotation,
@@ -18,7 +18,6 @@ import {
   StateGraph,
 } from "@langchain/langgraph";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-// import { ChatAnthropic } from "@langchain/anthropic";
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { ChatOpenAI } from "@langchain/openai";
 
@@ -193,33 +192,18 @@ const webSearchTool = new TavilySearchResults({
   maxResults: 2,
 });
 
+const systemMessage =
+  new SystemMessage(`You're an expert financial analyst, tasked with answering the users questions about a given company or companies.
+You do not have up to date information on the companies, so you much call tools when answering users questions.
+All finical data tools require a company ticker to be passed in as a parameter. If you do not know the ticker, you should use the webs search tool to find it.`);
+
 const GraphAnnotation = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
     reducer: messagesStateReducer,
-    default: () => [],
+    default: () => [systemMessage],
   }),
 });
 
-const shouldContinue = (
-  state: typeof GraphAnnotation.State
-): "tools" | typeof END => {
-  const { messages } = state;
-  const lastMessage = messages[messages.length - 1];
-  if (
-    "tool_calls" in lastMessage &&
-    Array.isArray(lastMessage.tool_calls) &&
-    lastMessage.tool_calls?.length
-  ) {
-    return "tools";
-  }
-  return END;
-};
-
-// LangGraph Studio fails to stream with Anthropic.
-// const llm = new ChatAnthropic({
-//   model: "claude-3-5-sonnet-20240620",
-//   temperature: 0,
-// });
 const llm = new ChatOpenAI({
   model: "gpt-4o",
   temperature: 0,
@@ -234,20 +218,34 @@ const tools = [
   webSearchTool,
 ];
 
-const systemMessage =
-  new SystemMessage(`You're an expert financial analyst, tasked with answering the users questions about a given company or companies.
-You do not have up to date information on the companies, so you much call tools when answering users questions.
-All finical data tools require a company ticker to be passed in as a parameter. If you do not know the ticker, you should use the webs search tool to find it.`);
-
-const agent = createReactAgent({
-  llm,
-  tools,
-  messageModifier: systemMessage,
-});
 const toolNode = new ToolNode<typeof GraphAnnotation.State>(tools);
 
+const callModel = async (state: typeof GraphAnnotation.State) => {
+  const { messages } = state;
+
+  const llmWithTools = llm.bindTools(tools);
+  const result = await llmWithTools.invoke(messages);
+  return { messages: [result] };
+};
+
+const shouldContinue = (
+  state: typeof GraphAnnotation.State
+): "tools" | typeof END => {
+  const { messages } = state;
+
+  const lastMessage = messages[messages.length - 1];
+  if (
+    "tool_calls" in lastMessage &&
+    Array.isArray(lastMessage.tool_calls) &&
+    lastMessage.tool_calls?.length
+  ) {
+    return "tools";
+  }
+  return END;
+};
+
 const workflow = new StateGraph(GraphAnnotation)
-  .addNode("agent", agent)
+  .addNode("agent", callModel)
   .addEdge(START, "agent")
   .addNode("tools", toolNode)
   .addConditionalEdges("agent", shouldContinue)
