@@ -5,12 +5,12 @@
   "license": "MIT",
   "workspaces": [
     "financial-expert",
-    "web"
+    "high-cardinality-tools"
   ],
   "devDependencies": {
     "turbo": "latest"
   },
   "resolutions": {
-    "@langchain/core": "0.2.29"
+    "@langchain/core": "0.2.30"
   }
 }
