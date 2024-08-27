@@ -228,20 +228,27 @@
   dependencies:
     "@langchain/langgraph-checkpoint" "~0.0.1"
 
-"@langchain/langgraph-checkpoint@~0.0.1", "@langchain/langgraph-checkpoint@~0.0.2":
+"@langchain/langgraph-checkpoint@~0.0.1":
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/@langchain/langgraph-checkpoint/-/langgraph-checkpoint-0.0.2.tgz#85d36da808ad08a603e8a8bb3389603811e7a374"
   integrity sha512-4bLncdoFR4+1gDVtA5H4QoSmXsvIGkrsoaDL6LpP58QriNrxjrufbeIF4PP6jcdsPmC0VuE93QeeOOhLUkOXpg==
   dependencies:
     uuid "^10.0.0"
 
-"@langchain/langgraph@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.1.2.tgz#97ee06938be7d48a24af551f3766e715be3c2d6c"
-  integrity sha512-QYzqNS+bTghVm/7bzyQAGVITon4PFP2lTP6vABzOrbzP31nnYmkHlm6PwH6YPCBcqPTIs1tQwZqRXG4Cc7TSkQ==
+"@langchain/langgraph-checkpoint@~0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@langchain/langgraph-checkpoint/-/langgraph-checkpoint-0.0.3.tgz#0ff555d1c589d5c749f6d4565311efb89d5dad88"
+  integrity sha512-ucchlYTrIbggvy5aeG/XlpfR0DJhwRtZpHSgJ8Lp3+QXQsLxCJFWQ/b6ENSaTIZP5H20bOz/EHAnJVv6sOWU1g==
+  dependencies:
+    uuid "^10.0.0"
+
+"@langchain/langgraph@0.1.4-rc.0":
+  version "0.1.4-rc.0"
+  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.1.4-rc.0.tgz#52f6624f91263de3d6a44cdb33686d6611676de5"
+  integrity sha512-2pq2SV+HFcXCmSbzNvic9oaZIWRdI6duSuRa/VvYzlkCYw34/aoBAfo4G73fyUSuJqQ9+HgKKSrUXL9YaTm/8w==
   dependencies:
     "@langchain/core" ">=0.2.20 <0.3.0"
-    "@langchain/langgraph-checkpoint" "~0.0.2"
+    "@langchain/langgraph-checkpoint" "~0.0.3"
     "@langchain/langgraph-checkpoint-sqlite" "~0.0.1"
     double-ended-queue "^2.1.0-0"
     uuid "^10.0.0"
