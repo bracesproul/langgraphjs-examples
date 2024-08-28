@@ -97,6 +97,7 @@ export async function createTools() {
   // Load from Wikipedia. If the data is not available, do not include the tool.
   const wikipediaTool = new WikipediaQueryRun({
     topKResults: 1,
+    maxDocContentLength: 20000,
   });
 
   // New ts-morph project for writing the tools.ts file
