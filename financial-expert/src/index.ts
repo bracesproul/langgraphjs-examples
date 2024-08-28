@@ -10,6 +10,7 @@ import {
 import {
   AIMessage,
   BaseMessage,
+  HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
@@ -31,10 +32,11 @@ const GraphAnnotation = Annotation.Root({
     reducer: messagesStateReducer,
     default: () => [systemMessage],
   }),
-  stockPurchaseDetails: Annotation<StockPurchase | null>({
+  requestedStockPurchaseDetails: Annotation<StockPurchase | null>({
     reducer: (_, value) => value, // Always overwrite the state if a new value is provided.
     default: () => null,
   }),
+  confirmedStockPurchaseDetails: Annotation<StockPurchase | null>,
   // purchaseConfirmed: Annotation<boolean>({
   //   reducer: (_, value) => value ?? false, // Always overwrite the state if a new value is provided.
   //   default: () => false,
@@ -59,8 +61,19 @@ const callModel = async (state: typeof GraphAnnotation.State) => {
 
 const shouldContinue = (
   state: typeof GraphAnnotation.State
-): Array<"tools" | "confirm_purchase" | "verify_purchase" | typeof END> => {
-  const { messages, stockPurchaseDetails } = state;
+): Array<
+  | "tools"
+  | "confirm_purchase"
+  | "verify_purchase"
+  | "execute_purchase"
+  | typeof END
+> => {
+  const { messages, requestedStockPurchaseDetails, purchaseConfirmed } = state;
+
+  if (requestedStockPurchaseDetails && purchaseConfirmed) {
+    // The user has confirmed the purchase, so we should execute the purchase.
+    return ["execute_purchase"];
+  }
 
   const lastMessage = messages[messages.length - 1];
   if (
@@ -70,8 +83,8 @@ const shouldContinue = (
     // LLM did not call any tools, or it's not an AI message, so we should end.
     return [END];
   }
-  // If `stockPurchaseDetails` is present, we want to route to the confirm purchase node.
-  if (stockPurchaseDetails) {
+  // If `requestedStockPurchaseDetails` is present, we want to route to the confirm purchase node.
+  if (requestedStockPurchaseDetails) {
     return ["confirm_purchase"];
   }
 
@@ -125,14 +138,7 @@ const findCompanyName = async (companyName: string) => {
   return extractedTicker.ticker;
 };
 
-/**
- * This node should be called if the user wants to purchase a stock. Here, we'll do the following:
- * Find the tool call which contains the `purchase_stock` call.
- * If the ticker and company name are not present, route to the node which asks the user for more information (returns an AIMessage with that as the content)
- * If the ticker is not present, but company name is, route to the find company name node.
- * If the ticker is present, route to the human in the loop, confirm purchase node.
- */
-const verifyPurchase = async (state: typeof GraphAnnotation.State) => {
+const preparePurchaseDetails = async (state: typeof GraphAnnotation.State) => {
   const { messages } = state;
   const lastMessage = messages[messages.length - 1];
   if (lastMessage._getType() !== "ai") {
@@ -178,7 +184,7 @@ const verifyPurchase = async (state: typeof GraphAnnotation.State) => {
 
   // Now we have the final ticker, we can return the purchase information.
   return {
-    stockPurchaseDetails: {
+    requestedStockPurchaseDetails: {
       ticker,
       quantity: purchaseStockTool.args.quantity ?? 1,
       maxPurchasePrice,
@@ -188,33 +194,39 @@ const verifyPurchase = async (state: typeof GraphAnnotation.State) => {
 
 const confirmPurchaseConditional = (
   state: typeof GraphAnnotation.State
-): typeof END | "execute_purchase" => {
-  const { purchaseConfirmed, stockPurchaseDetails } = state;
-  if (!stockPurchaseDetails) {
-    // This should only happen if the user did not provide the ticker or company name.
-    // In this case, a new AIMessage will be added to the state asking the user for the missing information.
-    return END;
-  }
-  if (!purchaseConfirmed) {
-    // Purchase not confirmed, end.
-    return END;
+): "execute_purchase" | "agent" => {
+  const { confirmedStockPurchaseDetails } = state;
+  if (!confirmedStockPurchaseDetails) {
+    // Details not confirmed, start over.
+    return "agent";
   }
   return "execute_purchase";
 };
 
 const executePurchase = async (state: typeof GraphAnnotation.State) => {
-  const { stockPurchaseDetails } = state;
-  if (!stockPurchaseDetails) {
+  const { confirmedStockPurchaseDetails } = state;
+  if (!confirmedStockPurchaseDetails) {
     throw new Error("Expected the stock purchase details to be present");
   }
+  const { ticker, quantity, maxPurchasePrice } = confirmedStockPurchaseDetails;
   // Execute the purchase. In this demo we'll just return a success message.
   return {
     messages: [
       new AIMessage(
-        `Successfully purchases ${stockPurchaseDetails.quantity} share(s) of` +
-          `${stockPurchaseDetails.ticker} at $${stockPurchaseDetails.maxPurchasePrice}`
+        `Successfully purchases ${quantity} share(s) of` +
+          `${ticker} at $${maxPurchasePrice}`
       ),
     ],
+  };
+};
+
+const confirmAuthorization = async (state: typeof GraphAnnotation.State) => {
+  return {
+    requestedStockPurchaseDetails: null,
+    purchaseConfirmed: false,
+    confirmedStockPurchaseDetails: state.purchaseConfirmed
+      ? state.requestedStockPurchaseDetails
+      : null,
   };
 };
 
@@ -223,8 +235,10 @@ const workflow = new StateGraph(GraphAnnotation)
   .addEdge(START, "agent")
   .addNode("tools", toolNode)
   .addConditionalEdges("agent", shouldContinue)
-  .addNode("verify_purchase", verifyPurchase)
-  .addConditionalEdges("verify_purchase", confirmPurchaseConditional)
+  .addNode("prepare_purchase_details", preparePurchaseDetails)
+  .addNode("confirm_authorization", confirmAuthorization)
+  .addEdge("prepare_purchase_details", "confirm_authorization")
+  .addConditionalEdges("confirm_authorization", confirmPurchaseConditional)
   .addNode("execute_purchase", executePurchase)
   .addEdge("execute_purchase", END)
   .addEdge("tools", "agent");
@@ -233,5 +247,32 @@ const checkpointer = new MemorySaver();
 
 export const graph = workflow.compile({
   checkpointer,
-  interruptAfter: ["verify_purchase"], // After `verify_purchase`, and before the `confirmPurchaseConditional`, interrupt to confirm the purchase.
+  interruptBefore: ["confirm_authorization"],
 });
+
+// const config = { configurable: { thread_id: "1" }, streamMode: "updates" as const };
+// const input = {
+//   messages: [new HumanMessage("I want to buy 4 shares of AAPL for $228 each.")],
+// };
+
+// for await (const event of await graph.stream(input, config)) {
+//   const key = Object.keys(event)[0];
+//   console.log(`Event: ${key}`);
+//   if (key === "verify_purchase") {
+//     console.log("\n---VERIFY PURCHASE---\n")
+//     console.log(event);
+//   }
+// }
+
+// await graph.updateState(config, { purchaseConfirmed: true });
+
+// console.log("UPDATED STATE------\n\n\n")
+
+// for await (const event of await graph.stream(null, config)) {
+//   const key = Object.keys(event)[0];
+//   console.log(`Event: ${key}`);
+//   if (key === "execute_purchase") {
+//     console.log("\n---EXECUTE PURCHASE---\n")
+//     console.log(event);
+//   }
+// }
