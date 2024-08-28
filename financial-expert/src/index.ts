@@ -59,15 +59,7 @@ const callModel = async (state: typeof GraphAnnotation.State) => {
   return { messages: [result] };
 };
 
-const shouldContinue = (
-  state: typeof GraphAnnotation.State
-): Array<
-  | "tools"
-  | "confirm_purchase"
-  | "verify_purchase"
-  | "execute_purchase"
-  | typeof END
-> => {
+const shouldContinue = (state: typeof GraphAnnotation.State) => {
   const { messages, requestedStockPurchaseDetails, purchaseConfirmed } = state;
 
   if (requestedStockPurchaseDetails && purchaseConfirmed) {
@@ -108,7 +100,7 @@ const shouldContinue = (
         return "tools";
       case "purchase_stock":
         // The user is trying to purchase a stock, route to the verify purchase node.
-        return "verify_purchase";
+        return "prepare_purchase_details";
       default:
         throw new Error(`Unexpected tool call: ${tc.name}`);
     }
@@ -213,8 +205,8 @@ const executePurchase = async (state: typeof GraphAnnotation.State) => {
   return {
     messages: [
       new AIMessage(
-        `Successfully purchases ${quantity} share(s) of` +
-          `${ticker} at $${maxPurchasePrice}`
+        `Successfully purchases ${quantity} share(s) of ` +
+          `${ticker} at $${maxPurchasePrice}/share.`
       ),
     ],
   };
@@ -250,6 +242,9 @@ export const graph = workflow.compile({
   interruptBefore: ["confirm_authorization"],
 });
 
+/**
+ * UNCOMMENT BELOW TO RUN PROGRAMMATICALLY
+ */
 // const config = { configurable: { thread_id: "1" }, streamMode: "updates" as const };
 // const input = {
 //   messages: [new HumanMessage("I want to buy 4 shares of AAPL for $228 each.")],
@@ -258,21 +253,26 @@ export const graph = workflow.compile({
 // for await (const event of await graph.stream(input, config)) {
 //   const key = Object.keys(event)[0];
 //   console.log(`Event: ${key}`);
-//   if (key === "verify_purchase") {
-//     console.log("\n---VERIFY PURCHASE---\n")
+
+//   if (key === "prepare_purchase_details") {
+//     console.log("\n---PREPARING PURCHASE DETAILS---\n")
 //     console.log(event);
 //   }
 // }
 
 // await graph.updateState(config, { purchaseConfirmed: true });
 
-// console.log("UPDATED STATE------\n\n\n")
+// console.log("\n---UPDATED STATE---\n")
 
 // for await (const event of await graph.stream(null, config)) {
 //   const key = Object.keys(event)[0];
 //   console.log(`Event: ${key}`);
-//   if (key === "execute_purchase") {
-//     console.log("\n---EXECUTE PURCHASE---\n")
+
+//   if (key === "confirm_authorization") {
+//     console.log("\n---CONFIRMING AUTHORIZATION---\n")
+//     console.log(event);
+//   } else if (key === "execute_purchase") {
+//     console.log("\n---EXECUTING PURCHASE---\n")
 //     console.log(event);
 //   }
 // }
