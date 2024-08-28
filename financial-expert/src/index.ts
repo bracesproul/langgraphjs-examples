@@ -1,196 +1,25 @@
-import { z } from "zod";
-import { tool } from "@langchain/core/tools";
-import type {
-  BalanceSheetsResponse,
-  CashFlowStatementsResponse,
-  CompanyFactsResponse,
-  IncomeStatementsResponse,
-  SnapshotResponse,
-} from "types.js";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { callFinancialDatasetAPI } from "utils.js";
 import {
   Annotation,
-  CompiledStateGraph,
   END,
+  MemorySaver,
   messagesStateReducer,
   START,
   StateGraph,
 } from "@langchain/langgraph";
-import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import {
+  AIMessage,
+  BaseMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
-
-const incomeStatementsTool = tool(
-  async (input) => {
-    try {
-      const data = await callFinancialDatasetAPI<IncomeStatementsResponse>({
-        endpoint: "/financials/income-statements",
-        params: {
-          ticker: input.ticker,
-          period: input.period ?? "annual",
-          limit: input.limit.toString() ?? "5",
-        },
-      });
-      return JSON.stringify(data, null);
-    } catch (e: any) {
-      console.warn("Error fetching income statements", e.message);
-      return `An error occurred while fetching income statements: ${e.message}`;
-    }
-  },
-  {
-    name: "income_statements",
-    description:
-      "Retrieves income statements for a specified company, showing detailed financial performance over a chosen time period. The output includes key metrics such as revenue, expenses, profits, and per-share data. Specifically, it provides: ticker, date, period type, revenue, cost of revenue, gross profit, operating expenses, income figures (operating, net, EBIT), tax expenses, earnings per share (basic and diluted), dividends per share, and share count information.",
-    schema: z.object({
-      ticker: z.string().describe("The ticker of the stock. Example: 'AAPL'"),
-      period: z
-        .enum(["annual", "quarterly", "ttm"])
-        .describe("The time period of the income statement. Example: 'annual'")
-        .optional()
-        .default("annual"),
-      limit: z
-        .number()
-        .int()
-        .positive()
-        .describe("The number of income statements to return. Example: 5")
-        .optional()
-        .default(5),
-    }),
-  }
-);
-
-const balanceSheetsTool = tool(
-  async (input) => {
-    try {
-      const data = await callFinancialDatasetAPI<BalanceSheetsResponse>({
-        endpoint: "/financials/balance-sheets",
-        params: {
-          ticker: input.ticker,
-          period: input.period ?? "annual",
-          limit: input.limit.toString() ?? "5",
-        },
-      });
-      return JSON.stringify(data, null);
-    } catch (e: any) {
-      console.warn("Error fetching balance sheets", e.message);
-      return `An error occurred while fetching balance sheets: ${e.message}`;
-    }
-  },
-  {
-    name: "balance_sheets",
-    description:
-      "Fetches balance sheets for a given company, providing a snapshot of its financial position at specific points in time. The output includes detailed information on assets (total, current, non-current), liabilities (total, current, non-current), and shareholders' equity. Specific data points include cash and equivalents, inventory, investments, property/plant/equipment, goodwill, debt, payables, retained earnings, and more. The result is a JSON stringified object containing an array of balance sheets.",
-    schema: z.object({
-      ticker: z.string().describe("The ticker of the stock. Example: 'AAPL'"),
-      period: z
-        .enum(["annual", "quarterly", "ttm"])
-        .describe("The time period of the balance sheet. Example: 'annual'")
-        .optional()
-        .default("annual"),
-      limit: z
-        .number()
-        .int()
-        .positive()
-        .describe("The number of balance sheets to return. Example: 5")
-        .optional()
-        .default(5),
-    }),
-  }
-);
-
-const cashFlowStatementsTool = tool(
-  async (input) => {
-    try {
-      const data = await callFinancialDatasetAPI<CashFlowStatementsResponse>({
-        endpoint: "/financials/cash-flow-statements",
-        params: {
-          ticker: input.ticker,
-          period: input.period ?? "annual",
-          limit: input.limit.toString() ?? "5",
-        },
-      });
-      return JSON.stringify(data, null);
-    } catch (e: any) {
-      console.warn("Error fetching cash flow statements", e.message);
-      return `An error occurred while fetching cash flow statements: ${e.message}`;
-    }
-  },
-  {
-    name: "cash_flow_statements",
-    description:
-      "Obtains cash flow statements for a company, detailing the inflows and outflows of cash from operating, investing, and financing activities. The result is a JSON stringified object containing an array of cash flow statements. Each statement includes: ticker, date, report period, net cash flows from operations/investing/financing, depreciation and amortization, share-based compensation, capital expenditure, business and investment acquisitions/disposals, debt and equity issuances/repayments, dividends, change in cash and equivalents, and effect of exchange rate changes.",
-    schema: z.object({
-      ticker: z.string().describe("The ticker of the stock. Example: 'AAPL'"),
-      period: z
-        .enum(["annual", "quarterly", "ttm"])
-        .describe("The period of the cash flow statement. Example: 'annual'")
-        .optional()
-        .default("annual"),
-      limit: z
-        .number()
-        .int()
-        .positive()
-        .describe("The number of cash flow statements to return. Example: 5")
-        .optional()
-        .default(5),
-    }),
-  }
-);
-
-const companyFactsTool = tool(
-  async (input) => {
-    try {
-      const data = await callFinancialDatasetAPI<CompanyFactsResponse>({
-        endpoint: "/company/facts",
-        params: {
-          ticker: input.ticker,
-        },
-      });
-      return JSON.stringify(data, null);
-    } catch (e: any) {
-      console.warn("Error fetching company facts", e.message);
-      return `An error occurred while fetching company facts: ${e.message}`;
-    }
-  },
-  {
-    name: "company_facts",
-    description:
-      "Provides key facts and information about a specified company. The result is a JSON stringified object containing details such as: ticker symbol, company name, CIK number, market capitalization, number of employees, SIC code and description, website URL, listing date, and whether the company is currently active.",
-    schema: z.object({
-      ticker: z.string().describe("The ticker of the company. Example: 'AAPL'"),
-    }),
-  }
-);
-
-const priceSnapshotTool = tool(
-  async (input) => {
-    try {
-      const data = await callFinancialDatasetAPI<SnapshotResponse>({
-        endpoint: "/prices/snapshot",
-        params: {
-          ticker: input.ticker,
-        },
-      });
-      return JSON.stringify(data, null);
-    } catch (e: any) {
-      console.warn("Error fetching price snapshots", e.message);
-      return `An error occurred while fetching price snapshots: ${e.message}`;
-    }
-  },
-  {
-    name: "price_snapshot",
-    description:
-      "Retrieves the current stock price and related market data for a given company. The snapshot includes the current price, ticker symbol, day's change in price and percentage, timestamp of the data, and a nanosecond-precision timestamp.",
-    schema: z.object({
-      ticker: z.string().describe("The ticker of the company. Example: 'AAPL'"),
-    }),
-  }
-);
-
-const webSearchTool = new TavilySearchResults({
-  maxResults: 2,
-});
+import {
+  priceSnapshotTool,
+  StockPurchase,
+  TOOLS_LIST,
+  webSearchTool,
+} from "tools.js";
+import { z } from "zod";
 
 const systemMessage =
   new SystemMessage(`You're an expert financial analyst, tasked with answering the users questions about a given company or companies.
@@ -202,6 +31,15 @@ const GraphAnnotation = Annotation.Root({
     reducer: messagesStateReducer,
     default: () => [systemMessage],
   }),
+  stockPurchaseDetails: Annotation<StockPurchase | null>({
+    reducer: (_, value) => value, // Always overwrite the state if a new value is provided.
+    default: () => null,
+  }),
+  // purchaseConfirmed: Annotation<boolean>({
+  //   reducer: (_, value) => value ?? false, // Always overwrite the state if a new value is provided.
+  //   default: () => false,
+  // }),
+  purchaseConfirmed: Annotation<boolean>,
 });
 
 const llm = new ChatOpenAI({
@@ -209,39 +47,175 @@ const llm = new ChatOpenAI({
   temperature: 0,
 });
 
-const tools = [
-  incomeStatementsTool,
-  balanceSheetsTool,
-  cashFlowStatementsTool,
-  companyFactsTool,
-  priceSnapshotTool,
-  webSearchTool,
-];
-
-const toolNode = new ToolNode<typeof GraphAnnotation.State>(tools);
+const toolNode = new ToolNode<typeof GraphAnnotation.State>(TOOLS_LIST);
 
 const callModel = async (state: typeof GraphAnnotation.State) => {
   const { messages } = state;
 
-  const llmWithTools = llm.bindTools(tools);
+  const llmWithTools = llm.bindTools(TOOLS_LIST);
   const result = await llmWithTools.invoke(messages);
   return { messages: [result] };
 };
 
 const shouldContinue = (
   state: typeof GraphAnnotation.State
-): "tools" | typeof END => {
-  const { messages } = state;
+): Array<"tools" | "confirm_purchase" | "verify_purchase" | typeof END> => {
+  const { messages, stockPurchaseDetails } = state;
 
   const lastMessage = messages[messages.length - 1];
   if (
-    "tool_calls" in lastMessage &&
-    Array.isArray(lastMessage.tool_calls) &&
-    lastMessage.tool_calls?.length
+    lastMessage._getType() !== "ai" ||
+    !(lastMessage as AIMessage).tool_calls?.length
   ) {
-    return "tools";
+    // LLM did not call any tools, or it's not an AI message, so we should end.
+    return [END];
   }
-  return END;
+  // If `stockPurchaseDetails` is present, we want to route to the confirm purchase node.
+  if (stockPurchaseDetails) {
+    return ["confirm_purchase"];
+  }
+
+  const { tool_calls } = lastMessage as AIMessage;
+  if (!tool_calls?.length) {
+    throw new Error(
+      "Expected tool_calls to be an array with at least one element"
+    );
+  }
+
+  return tool_calls.map((tc) => {
+    // Map the tool call to the proper node.
+    switch (tc.name) {
+      case "income_statements":
+      case "balance_sheets":
+      case "cash_flow_statements":
+      case "company_facts":
+      case "price_snapshot":
+      case webSearchTool.name:
+        // Generic tool is called, so we should call the tools node.
+        return "tools";
+      case "purchase_stock":
+        // The user is trying to purchase a stock, route to the verify purchase node.
+        return "verify_purchase";
+      default:
+        throw new Error(`Unexpected tool call: ${tc.name}`);
+    }
+  });
+};
+
+const findCompanyName = async (companyName: string) => {
+  // call the web search tool to find the company name, then pass to LLM to extract from the search results
+  const searchResults: string = await webSearchTool.invoke(
+    `What is the ticker symbol for ${companyName}?`
+  );
+  const llmWithTickerOutput = llm.withStructuredOutput(
+    z
+      .object({
+        ticker: z.string().describe("The ticker symbol of the company"),
+      })
+      .describe(
+        `Extract the ticker symbol of ${companyName} from the provided context.`
+      ),
+    { name: "extract_ticker" }
+  );
+  const extractedTicker = await llmWithTickerOutput.invoke([
+    "human",
+    `Given the following search results, extract the ticker symbol for ${companyName}:\n${searchResults}`,
+  ]);
+
+  return extractedTicker.ticker;
+};
+
+/**
+ * This node should be called if the user wants to purchase a stock. Here, we'll do the following:
+ * Find the tool call which contains the `purchase_stock` call.
+ * If the ticker and company name are not present, route to the node which asks the user for more information (returns an AIMessage with that as the content)
+ * If the ticker is not present, but company name is, route to the find company name node.
+ * If the ticker is present, route to the human in the loop, confirm purchase node.
+ */
+const verifyPurchase = async (state: typeof GraphAnnotation.State) => {
+  const { messages } = state;
+  const lastMessage = messages[messages.length - 1];
+  if (lastMessage._getType() !== "ai") {
+    throw new Error("Expected the last message to be an AI message");
+  }
+  const lastAIMessage = lastMessage as AIMessage;
+  const purchaseStockTool = lastAIMessage.tool_calls?.find(
+    (tc) => tc.name === "purchase_stock"
+  );
+  if (!purchaseStockTool) {
+    throw new Error(
+      "Expected the last AI message to have a purchase_stock tool call"
+    );
+  }
+
+  if (!purchaseStockTool.args.ticker && !purchaseStockTool.args.companyName) {
+    // The user did not provide the ticker or the company name.
+    // Ask the user for the missing information.
+    return {
+      messages: [
+        new AIMessage(
+          "Please provide either the company ticker or the company name to purchase stock."
+        ),
+      ],
+    };
+  }
+  let { maxPurchasePrice, ticker } = purchaseStockTool.args;
+  if (!ticker && purchaseStockTool.args.companyName) {
+    // The user did not provide the ticker, but did provide the company name.
+    // Call the `findCompanyName` tool to get the ticker.
+    ticker = await findCompanyName(purchaseStockTool.args.companyName);
+  }
+
+  if (!ticker) {
+    throw new Error("Failed to find the ticker symbol for the company");
+  }
+
+  if (!maxPurchasePrice) {
+    // call the `priceSnapshotTool` to fetch the current price
+    const priceSnapshot = await priceSnapshotTool.invoke({ ticker });
+    maxPurchasePrice = priceSnapshot.snapshot.price;
+  }
+
+  // Now we have the final ticker, we can return the purchase information.
+  return {
+    stockPurchaseDetails: {
+      ticker,
+      quantity: purchaseStockTool.args.quantity ?? 1,
+      maxPurchasePrice,
+    },
+  };
+};
+
+const confirmPurchaseConditional = (
+  state: typeof GraphAnnotation.State
+): typeof END | "execute_purchase" => {
+  const { purchaseConfirmed, stockPurchaseDetails } = state;
+  if (!stockPurchaseDetails) {
+    // This should only happen if the user did not provide the ticker or company name.
+    // In this case, a new AIMessage will be added to the state asking the user for the missing information.
+    return END;
+  }
+  if (!purchaseConfirmed) {
+    // Purchase not confirmed, end.
+    return END;
+  }
+  return "execute_purchase";
+};
+
+const executePurchase = async (state: typeof GraphAnnotation.State) => {
+  const { stockPurchaseDetails } = state;
+  if (!stockPurchaseDetails) {
+    throw new Error("Expected the stock purchase details to be present");
+  }
+  // Execute the purchase. In this demo we'll just return a success message.
+  return {
+    messages: [
+      new AIMessage(
+        `Successfully purchases ${stockPurchaseDetails.quantity} share(s) of` +
+          `${stockPurchaseDetails.ticker} at $${stockPurchaseDetails.maxPurchasePrice}`
+      ),
+    ],
+  };
 };
 
 const workflow = new StateGraph(GraphAnnotation)
@@ -249,10 +223,15 @@ const workflow = new StateGraph(GraphAnnotation)
   .addEdge(START, "agent")
   .addNode("tools", toolNode)
   .addConditionalEdges("agent", shouldContinue)
+  .addNode("verify_purchase", verifyPurchase)
+  .addConditionalEdges("verify_purchase", confirmPurchaseConditional)
+  .addNode("execute_purchase", executePurchase)
+  .addEdge("execute_purchase", END)
   .addEdge("tools", "agent");
 
-export const graph: CompiledStateGraph<
-  typeof GraphAnnotation.State,
-  Partial<typeof GraphAnnotation.State>,
-  typeof START | "agent" | "tools"
-> = workflow.compile();
+const checkpointer = new MemorySaver();
+
+export const graph = workflow.compile({
+  checkpointer,
+  interruptAfter: ["verify_purchase"], // After `verify_purchase`, and before the `confirmPurchaseConditional`, interrupt to confirm the purchase.
+});
