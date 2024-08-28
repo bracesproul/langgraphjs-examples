@@ -33,14 +33,10 @@ const GraphAnnotation = Annotation.Root({
     default: () => [systemMessage],
   }),
   requestedStockPurchaseDetails: Annotation<StockPurchase | null>({
-    reducer: (_, value) => value, // Always overwrite the state if a new value is provided.
+    reducer: (_, update) => update, // Always overwrite the state if a new value is provided.
     default: () => null,
   }),
   confirmedStockPurchaseDetails: Annotation<StockPurchase | null>,
-  // purchaseConfirmed: Annotation<boolean>({
-  //   reducer: (_, value) => value ?? false, // Always overwrite the state if a new value is provided.
-  //   default: () => false,
-  // }),
   purchaseConfirmed: Annotation<boolean>,
 });
 
