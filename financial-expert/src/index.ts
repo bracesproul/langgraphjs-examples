@@ -213,6 +213,13 @@ const executePurchase = async (state: typeof GraphAnnotation.State) => {
 };
 
 const confirmAuthorization = async (state: typeof GraphAnnotation.State) => {
+  console.log("\n---confirmAuthorization---\n")
+  console.log({
+    requestedStockPurchaseDetails: state.requestedStockPurchaseDetails,
+    purchaseConfirmed: state.purchaseConfirmed,
+    confirmedStockPurchaseDetails: state.confirmedStockPurchaseDetails
+  });
+  console.log("\n---confirmAuthorization---\n")
   return {
     requestedStockPurchaseDetails: null,
     purchaseConfirmed: false,
