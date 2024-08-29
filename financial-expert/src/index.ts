@@ -10,8 +10,8 @@ import {
 import {
   AIMessage,
   BaseMessage,
-  HumanMessage,
   SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import {
@@ -56,12 +56,7 @@ const callModel = async (state: typeof GraphAnnotation.State) => {
 };
 
 const shouldContinue = (state: typeof GraphAnnotation.State) => {
-  const { messages, requestedStockPurchaseDetails, purchaseConfirmed } = state;
-
-  if (requestedStockPurchaseDetails && purchaseConfirmed) {
-    // The user has confirmed the purchase, so we should execute the purchase.
-    return ["execute_purchase"];
-  }
+  const { messages, requestedStockPurchaseDetails } = state;
 
   const lastMessage = messages[messages.length - 1];
   if (
@@ -69,11 +64,11 @@ const shouldContinue = (state: typeof GraphAnnotation.State) => {
     !(lastMessage as AIMessage).tool_calls?.length
   ) {
     // LLM did not call any tools, or it's not an AI message, so we should end.
-    return [END];
+    return END;
   }
   // If `requestedStockPurchaseDetails` is present, we want to route to the confirm purchase node.
   if (requestedStockPurchaseDetails) {
-    return ["confirm_purchase"];
+    return "confirm_purchase";
   }
 
   const { tool_calls } = lastMessage as AIMessage;
@@ -92,7 +87,7 @@ const shouldContinue = (state: typeof GraphAnnotation.State) => {
       case "company_facts":
       case "price_snapshot":
       case webSearchTool.name:
-        // Generic tool is called, so we should call the tools node.
+        // Generic tool is called, so we should call `ToolNode`.
         return "tools";
       case "purchase_stock":
         // The user is trying to purchase a stock, route to the verify purchase node.
@@ -104,7 +99,7 @@ const shouldContinue = (state: typeof GraphAnnotation.State) => {
 };
 
 const findCompanyName = async (companyName: string) => {
-  // call the web search tool to find the company name, then pass to LLM to extract from the search results
+  // Use the web search tool to find the ticker symbol for the company.
   const searchResults: string = await webSearchTool.invoke(
     `What is the ticker symbol for ${companyName}?`
   );
@@ -132,6 +127,7 @@ const preparePurchaseDetails = async (state: typeof GraphAnnotation.State) => {
   if (lastMessage._getType() !== "ai") {
     throw new Error("Expected the last message to be an AI message");
   }
+
   const lastAIMessage = lastMessage as AIMessage;
   const purchaseStockTool = lastAIMessage.tool_calls?.find(
     (tc) => tc.name === "purchase_stock"
@@ -144,9 +140,18 @@ const preparePurchaseDetails = async (state: typeof GraphAnnotation.State) => {
 
   if (!purchaseStockTool.args.ticker && !purchaseStockTool.args.companyName) {
     // The user did not provide the ticker or the company name.
-    // Ask the user for the missing information.
+    // Ask the user for the missing information. Also, if the last message had a tool call
+    // we need to add ToolMessages to the messages array.
+    const toolMessages = lastAIMessage.tool_calls?.map((tc) => {
+      return new ToolMessage({
+        name: tc.name,
+        content: "Please provide the missing information.",
+        tool_call_id: tc.id ?? "",
+      });
+    });
     return {
       messages: [
+        ...(toolMessages ?? []),
         new AIMessage(
           "Please provide either the company ticker or the company name to purchase stock."
         ),
@@ -180,14 +185,13 @@ const preparePurchaseDetails = async (state: typeof GraphAnnotation.State) => {
   };
 };
 
-const confirmPurchaseConditional = (
-  state: typeof GraphAnnotation.State
-): "execute_purchase" | "agent" => {
+const confirmPurchaseConditional = (state: typeof GraphAnnotation.State) => {
   const { confirmedStockPurchaseDetails } = state;
   if (!confirmedStockPurchaseDetails) {
     // Details not confirmed, start over.
     return "agent";
   }
+
   return "execute_purchase";
 };
 
@@ -196,6 +200,7 @@ const executePurchase = async (state: typeof GraphAnnotation.State) => {
   if (!confirmedStockPurchaseDetails) {
     throw new Error("Expected the stock purchase details to be present");
   }
+
   const { ticker, quantity, maxPurchasePrice } = confirmedStockPurchaseDetails;
   // Execute the purchase. In this demo we'll just return a success message.
   return {
@@ -209,6 +214,8 @@ const executePurchase = async (state: typeof GraphAnnotation.State) => {
 };
 
 const confirmAuthorization = async (state: typeof GraphAnnotation.State) => {
+  // Remove the requested purchase details from the state. If the purchase is confirmed,
+  // then set the `confirmedStockPurchaseDetails` with the requested details.
   return {
     requestedStockPurchaseDetails: null,
     purchaseConfirmed: false,
@@ -222,14 +229,22 @@ const workflow = new StateGraph(GraphAnnotation)
   .addNode("agent", callModel)
   .addEdge(START, "agent")
   .addNode("tools", toolNode)
-  .addConditionalEdges("agent", shouldContinue)
   .addNode("prepare_purchase_details", preparePurchaseDetails)
   .addNode("confirm_authorization", confirmAuthorization)
   .addEdge("prepare_purchase_details", "confirm_authorization")
-  .addConditionalEdges("confirm_authorization", confirmPurchaseConditional)
   .addNode("execute_purchase", executePurchase)
   .addEdge("execute_purchase", END)
-  .addEdge("tools", "agent");
+  .addEdge("tools", "agent")
+  .addConditionalEdges("agent", shouldContinue, [
+    "tools",
+    END,
+    "prepare_purchase_details",
+    "execute_purchase",
+  ])
+  .addConditionalEdges("confirm_authorization", confirmPurchaseConditional, [
+    "agent",
+    "execute_purchase",
+  ]);
 
 const checkpointer = new MemorySaver();
 
