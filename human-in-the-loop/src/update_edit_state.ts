@@ -10,7 +10,6 @@ import { type AIMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
-import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 
 const llm = new ChatOpenAI({
   model: "gpt-4o",
@@ -90,8 +89,10 @@ async function main() {
   const currentState = await graph.getState(config);
   const lastMessage =
     currentState.values.messages[currentState.values.messages.length - 1];
-  console.log("Last message tool calls:");
-  console.dir(lastMessage.tool_calls);
+  console.log("Last message tool calls:", {
+    name: lastMessage.tool_calls[0].name,
+    args: lastMessage.tool_calls[0].args,
+  });
 
   console.log(
     "Updating state to:",

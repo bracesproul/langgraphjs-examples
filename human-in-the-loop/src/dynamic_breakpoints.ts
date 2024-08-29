@@ -5,9 +5,8 @@ import {
   START,
   StateGraph,
   NodeInterrupt,
-  MessagesAnnotation,
 } from "@langchain/langgraph";
-import { type AIMessage } from "@langchain/core/messages";
+import { BaseMessage, type AIMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
@@ -17,7 +16,10 @@ const GraphAnnotation = Annotation.Root({
   /**
    * Messages state with reducer and default factory.
    */
-  ...MessagesAnnotation.spec,
+  messages: Annotation<BaseMessage[]>({
+    reducer: (state, update) => state.concat(update),
+    default: () => [],
+  }),
   /**
    * Whether or not permission to tell a joke has been granted.
    */
@@ -54,7 +56,7 @@ const callModel = async (state: typeof GraphAnnotation.State) => {
 
   const llmWithTools = llm.bindTools(tools);
   const result = await llmWithTools.invoke(messages);
-  return { messages: result };
+  return { messages: [result] };
 };
 
 const shouldContinue = (state: typeof GraphAnnotation.State) => {

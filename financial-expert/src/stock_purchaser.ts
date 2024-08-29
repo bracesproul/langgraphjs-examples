@@ -6,9 +6,10 @@ import {
   START,
   StateGraph,
   NodeInterrupt,
-  MessagesAnnotation,
+  Messages,
+  messagesStateReducer,
 } from "@langchain/langgraph";
-import { type AIMessage } from "@langchain/core/messages";
+import { BaseMessage, type AIMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   priceSnapshotTool,
@@ -19,7 +20,10 @@ import {
 import { z } from "zod";
 
 const GraphAnnotation = Annotation.Root({
-  ...MessagesAnnotation.spec, // Adds the `messages` state to the graph.
+  messages: Annotation<BaseMessage[], Messages>({
+    reducer: messagesStateReducer,
+    default: () => [],
+  }),
   requestedStockPurchaseDetails: Annotation<StockPurchase | null>({
     reducer: (_, update) => update, // Always overwrite the state if a new value is provided.
     default: () => null,
