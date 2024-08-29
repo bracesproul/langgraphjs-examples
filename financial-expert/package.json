@@ -14,10 +14,9 @@
   "author": "Brace Sproul",
   "license": "MIT",
   "dependencies": {
-    "@langchain/anthropic": "^0.2.15",
     "@langchain/community": "^0.2.31",
-    "@langchain/core": "^0.2.30",
-    "@langchain/langgraph": "^0.1.7",
+    "@langchain/core": "^0.2.31",
+    "@langchain/langgraph": "^0.1.9",
     "@langchain/langgraph-checkpoint": "^0.0.4",
     "@langchain/openai": "^0.2.8",
     "zod": "^3.23.8"

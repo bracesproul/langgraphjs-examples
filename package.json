@@ -8,9 +8,9 @@
     "high-cardinality-tools"
   ],
   "devDependencies": {
-    "turbo": "latest"
+    "turbo": "^2.1.0"
   },
   "resolutions": {
-    "@langchain/core": "0.2.30"
+    "@langchain/core": "0.2.31"
   }
 }

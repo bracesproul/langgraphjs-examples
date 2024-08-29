@@ -6,6 +6,7 @@ import {
   messagesStateReducer,
   START,
   StateGraph,
+  NodeInterrupt,
 } from "@langchain/langgraph";
 import {
   AIMessage,
@@ -22,10 +23,13 @@ import {
 } from "tools.js";
 import { z } from "zod";
 
-const systemMessage =
-  new SystemMessage(`You're an expert financial analyst, tasked with answering the users questions about a given company or companies.
-You do not have up to date information on the companies, so you much call tools when answering users questions.
-All finical data tools require a company ticker to be passed in as a parameter. If you do not know the ticker, you should use the webs search tool to find it.`);
+const systemMessage = new SystemMessage(
+  "You're an expert financial analyst, tasked with answering the users questions " +
+    "about a given company or companies. You do not have up to date information on " +
+    "the companies, so you much call tools when answering users questions. " +
+    "All finical data tools require a company ticker to be passed in as a parameter. If you " +
+    "do not know the ticker, you should use the webs search tool to find it."
+);
 
 const GraphAnnotation = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
@@ -36,7 +40,6 @@ const GraphAnnotation = Annotation.Root({
     reducer: (_, update) => update, // Always overwrite the state if a new value is provided.
     default: () => null,
   }),
-  confirmedStockPurchaseDetails: Annotation<StockPurchase | null>,
   purchaseConfirmed: Annotation<boolean>,
 });
 
@@ -66,9 +69,9 @@ const shouldContinue = (state: typeof GraphAnnotation.State) => {
     // LLM did not call any tools, or it's not an AI message, so we should end.
     return END;
   }
-  // If `requestedStockPurchaseDetails` is present, we want to route to the confirm purchase node.
+  // If `requestedStockPurchaseDetails` is present, we want to execute the purchase
   if (requestedStockPurchaseDetails) {
-    return "confirm_purchase";
+    return "execute_purchase";
   }
 
   const { tool_calls } = lastMessage as AIMessage;
@@ -185,23 +188,17 @@ const preparePurchaseDetails = async (state: typeof GraphAnnotation.State) => {
   };
 };
 
-const confirmPurchaseConditional = (state: typeof GraphAnnotation.State) => {
-  const { confirmedStockPurchaseDetails } = state;
-  if (!confirmedStockPurchaseDetails) {
-    // Details not confirmed, start over.
-    return "agent";
-  }
-
-  return "execute_purchase";
-};
-
 const executePurchase = async (state: typeof GraphAnnotation.State) => {
-  const { confirmedStockPurchaseDetails } = state;
-  if (!confirmedStockPurchaseDetails) {
-    throw new Error("Expected the stock purchase details to be present");
+  const { purchaseConfirmed, requestedStockPurchaseDetails } = state;
+  if (!requestedStockPurchaseDetails) {
+    throw new Error("Expected requestedStockPurchaseDetails to be present");
+  }
+  if (!purchaseConfirmed) {
+    // Interrupt the node to request permission to execute the purchase.
+    throw new NodeInterrupt("Please confirm the purchase before executing.");
   }
 
-  const { ticker, quantity, maxPurchasePrice } = confirmedStockPurchaseDetails;
+  const { ticker, quantity, maxPurchasePrice } = requestedStockPurchaseDetails;
   // Execute the purchase. In this demo we'll just return a success message.
   return {
     messages: [
@@ -213,26 +210,13 @@ const executePurchase = async (state: typeof GraphAnnotation.State) => {
   };
 };
 
-const confirmAuthorization = async (state: typeof GraphAnnotation.State) => {
-  // Remove the requested purchase details from the state. If the purchase is confirmed,
-  // then set the `confirmedStockPurchaseDetails` with the requested details.
-  return {
-    requestedStockPurchaseDetails: null,
-    purchaseConfirmed: false,
-    confirmedStockPurchaseDetails: state.purchaseConfirmed
-      ? state.requestedStockPurchaseDetails
-      : null,
-  };
-};
-
 const workflow = new StateGraph(GraphAnnotation)
   .addNode("agent", callModel)
   .addEdge(START, "agent")
   .addNode("tools", toolNode)
   .addNode("prepare_purchase_details", preparePurchaseDetails)
-  .addNode("confirm_authorization", confirmAuthorization)
-  .addEdge("prepare_purchase_details", "confirm_authorization")
   .addNode("execute_purchase", executePurchase)
+  .addEdge("prepare_purchase_details", "execute_purchase")
   .addEdge("execute_purchase", END)
   .addEdge("tools", "agent")
   .addConditionalEdges("agent", shouldContinue, [
@@ -240,15 +224,10 @@ const workflow = new StateGraph(GraphAnnotation)
     END,
     "prepare_purchase_details",
     "execute_purchase",
-  ])
-  .addConditionalEdges("confirm_authorization", confirmPurchaseConditional, [
-    "agent",
-    "execute_purchase",
   ]);
 
 const checkpointer = new MemorySaver();
 
 export const graph = workflow.compile({
   checkpointer,
-  interruptBefore: ["confirm_authorization"],
 });
