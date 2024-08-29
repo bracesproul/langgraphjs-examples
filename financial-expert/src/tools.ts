@@ -279,12 +279,21 @@ export const webSearchTool = new TavilySearchResults({
   maxResults: 2,
 });
 
-export const TOOLS_LIST = [
+export const ALL_TOOLS_LIST = [
   incomeStatementsTool,
   balanceSheetsTool,
   cashFlowStatementsTool,
   companyFactsTool,
   priceSnapshotTool,
   purchaseStockTool,
+  webSearchTool,
+];
+
+export const SIMPLE_TOOLS_LIST = [
+  incomeStatementsTool,
+  balanceSheetsTool,
+  cashFlowStatementsTool,
+  companyFactsTool,
+  priceSnapshotTool,
   webSearchTool,
 ];
