@@ -36,7 +36,6 @@ const workflow = new StateGraph(MessagesAnnotation)
   .addNode("nodeOne", nodeOne)
   .addNode("nodeTwo", nodeTwo)
   .addNode("nodeThree", nodeThree)
-
   .addEdge(START, "nodeOne")
   .addEdge("nodeOne", "nodeTwo")
   .addEdge("nodeTwo", "nodeThree")
