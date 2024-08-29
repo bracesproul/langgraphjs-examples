@@ -16,8 +16,8 @@
   "dependencies": {
     "@langchain/anthropic": "^0.2.15",
     "@langchain/community": "^0.2.31",
-    "@langchain/core": "^0.2.30",
-    "@langchain/langgraph": "0.1.4-rc.2",
+    "@langchain/core": "^0.2.31",
+    "@langchain/langgraph": "^0.1.9",
     "@langchain/openai": "^0.2.8",
     "csv-parser": "^3.0.0",
     "langchain": "^0.2.17",
