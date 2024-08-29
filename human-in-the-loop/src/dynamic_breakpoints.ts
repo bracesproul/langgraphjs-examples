@@ -5,6 +5,7 @@ import {
   START,
   StateGraph,
   NodeInterrupt,
+  MemorySaver,
 } from "@langchain/langgraph";
 import { BaseMessage, type AIMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
@@ -73,6 +74,7 @@ const shouldContinue = (state: typeof GraphAnnotation.State) => {
   return messageCastAI.tool_calls.map((tc) => {
     if (tc.name === "tell_joke") {
       if (!canTellJoke) {
+        console.log("---THROWING INTERRUPT---\n");
         // throw a NodeInterrupt to interrupt the flow and ask the user if they want to hear a joke
         throw new NodeInterrupt("You must grant permission to tell a joke.");
       } else {
@@ -93,4 +95,42 @@ const workflow = new StateGraph(GraphAnnotation)
   .addEdge("tools", "agent")
   .addConditionalEdges("agent", shouldContinue, ["tools", END]);
 
-export const graph = workflow.compile();
+const checkpointer = new MemorySaver();
+
+export const graph = workflow.compile({ checkpointer });
+
+async function main() {
+  const config = {
+    configurable: { thread_id: "dynamic_breakpoints" },
+    streamMode: "updates" as const,
+  };
+  const input = { messages: [{ role: "user", content: "Tell me a joke." }] };
+
+  for await (const event of await graph.stream(input, config)) {
+    // no-op
+  }
+
+  console.log("---INTERRUPTING GRAPH TO UPDATE STATE---\n");
+
+  console.log(
+    "---BEFORE STATE UPDATE---",
+    (await graph.getState(config)).values.canTellJoke,
+    "\n"
+  );
+
+  await graph.updateState(config, { canTellJoke: true });
+
+  console.log(
+    "---AFTER STATE UPDATE---",
+    (await graph.getState(config)).values.canTellJoke,
+    "\n"
+  );
+
+  console.log("---CONTINUING GRAPH AFTER STATE UPDATE---\n");
+
+  for await (const event of await graph.stream(null, config)) {
+    console.log(event, "\n");
+  }
+}
+
+main();
