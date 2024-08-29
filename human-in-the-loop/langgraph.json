@@ -1,0 +1,11 @@
+{
+  "node_version": "20",
+  "dockerfile_lines": [],
+  "dependencies": ["."],
+  "graphs": {
+    "dynamic_breakpoints": "./src/dynamic_breakpoints.ts:graph",
+    "human_in_the_loop": "./src/human_in_the_loop.ts:graph",
+    "update_edit_state": "./src/update_edit_state.ts:graph"
+  },
+  "env": "../.env"
+}

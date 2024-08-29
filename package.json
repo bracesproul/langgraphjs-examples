@@ -5,7 +5,8 @@
   "license": "MIT",
   "workspaces": [
     "financial-expert",
-    "high-cardinality-tools"
+    "high-cardinality-tools",
+    "human-in-the-loop"
   ],
   "devDependencies": {
     "turbo": "^2.1.0"
