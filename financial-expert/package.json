@@ -16,7 +16,7 @@
   "dependencies": {
     "@langchain/community": "^0.2.31",
     "@langchain/core": "^0.2.31",
-    "@langchain/langgraph": "^0.1.10-rc.1",
+    "@langchain/langgraph": "^0.1.10-rc.3",
     "@langchain/langgraph-checkpoint": "^0.0.4",
     "@langchain/openai": "^0.2.8",
     "zod": "^3.23.8"
@@ -35,5 +35,8 @@
     "prettier": "^2.8.3",
     "tsx": "^3.12.3",
     "typescript": "^5.0.0"
+  },
+  "resolutions": {
+    "@langchain/core": "0.2.31"
   }
 }

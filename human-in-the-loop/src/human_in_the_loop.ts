@@ -1,16 +1,14 @@
 import {
-  BaseMessage,
   HumanMessage,
-  type BaseMessageLike,
 } from "@langchain/core/messages";
-import { END, START, StateGraph, Annotation } from "@langchain/langgraph";
+import { END, START, StateGraph, MessagesAnnotation, MemorySaver } from "@langchain/langgraph";
 
-const MessagesAnnotation = Annotation.Root({
-  messages: Annotation<BaseMessage[]>({
-    reducer: (state, update) => state.concat(update),
-    default: () => [],
-  }),
-});
+// const MessagesAnnotation = Annotation.Root({
+//   messages: Annotation<BaseMessage[]>({
+//     reducer: (state, update) => state.concat(update),
+//     default: () => [],
+//   }),
+// });
 
 const nodeOne = (_: typeof MessagesAnnotation.State) => {
   return {
@@ -39,4 +37,5 @@ const workflow = new StateGraph(MessagesAnnotation)
   .addEdge("nodeTwo", "nodeThree")
   .addEdge("nodeThree", END);
 
-export const graph = workflow.compile();
+const checkpointer = new MemorySaver();
+export const graph = workflow.compile({ checkpointer });

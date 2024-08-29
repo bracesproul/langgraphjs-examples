@@ -3,8 +3,8 @@
   "dockerfile_lines": [],
   "dependencies": ["."],
   "graphs": {
-    "dynamic_breakpoints": "./src/dynamic_breakpoints.ts:graph",
     "human_in_the_loop": "./src/human_in_the_loop.ts:graph"
   },
-  "env": "../.env"
+  "env": ".env"
 }
+

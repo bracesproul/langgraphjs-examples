@@ -38,7 +38,7 @@ const callModel = async (state: typeof MessagesAnnotation.State) => {
 
   const llmWithTools = llm.bindTools(tools);
   const result = await llmWithTools.invoke(messages);
-  return { messages: result };
+  return { messages: [result] };
 };
 
 const shouldContinue = (state: typeof MessagesAnnotation.State) => {

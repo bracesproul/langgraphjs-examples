@@ -4,8 +4,7 @@
   "dependencies": ["."],
   "graphs": {
     "simple_agent": "./src/simple_agent.ts:graph",
-    "stock_purchaser_agent": "./src/stock_purchaser.ts:graph",
-    "dynamic_breakpoints": "./src/dynamic_breakpoints.ts:graph"
+    "stock_purchaser_agent": "./src/stock_purchaser.ts:graph"
   },
   "env": "../.env"
 }
