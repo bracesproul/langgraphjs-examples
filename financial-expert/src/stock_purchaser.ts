@@ -3,17 +3,12 @@ import {
   Annotation,
   END,
   MemorySaver,
-  messagesStateReducer,
   START,
   StateGraph,
   NodeInterrupt,
+  MessagesAnnotation,
 } from "@langchain/langgraph";
-import {
-  AIMessage,
-  BaseMessage,
-  SystemMessage,
-  ToolMessage,
-} from "@langchain/core/messages";
+import { type AIMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   priceSnapshotTool,
@@ -23,19 +18,8 @@ import {
 } from "tools.js";
 import { z } from "zod";
 
-const systemMessage = new SystemMessage(
-  "You're an expert financial analyst, tasked with answering the users questions " +
-    "about a given company or companies. You do not have up to date information on " +
-    "the companies, so you much call tools when answering users questions. " +
-    "All finical data tools require a company ticker to be passed in as a parameter. If you " +
-    "do not know the ticker, you should use the webs search tool to find it."
-);
-
 const GraphAnnotation = Annotation.Root({
-  messages: Annotation<BaseMessage[]>({
-    reducer: messagesStateReducer,
-    default: () => [systemMessage],
-  }),
+  ...MessagesAnnotation.spec, // Adds the `messages` state to the graph.
   requestedStockPurchaseDetails: Annotation<StockPurchase | null>({
     reducer: (_, update) => update, // Always overwrite the state if a new value is provided.
     default: () => null,
@@ -48,33 +32,44 @@ const llm = new ChatOpenAI({
   temperature: 0,
 });
 
-const toolNode = new ToolNode<typeof GraphAnnotation.State>(ALL_TOOLS_LIST);
+const toolNode = new ToolNode(ALL_TOOLS_LIST);
 
 const callModel = async (state: typeof GraphAnnotation.State) => {
   const { messages } = state;
 
+  const systemMessage = {
+    role: "system",
+    content:
+      "You're an expert financial analyst, tasked with answering the users questions " +
+      "about a given company or companies. You do not have up to date information on " +
+      "the companies, so you much call tools when answering users questions. " +
+      "All financial data tools require a company ticker to be passed in as a parameter. If you " +
+      "do not know the ticker, you should use the webs search tool to find it.",
+  };
+
   const llmWithTools = llm.bindTools(ALL_TOOLS_LIST);
-  const result = await llmWithTools.invoke(messages);
-  return { messages: [result] };
+  const result = await llmWithTools.invoke([systemMessage, ...messages]);
+  return { messages: result };
 };
 
 const shouldContinue = (state: typeof GraphAnnotation.State) => {
   const { messages, requestedStockPurchaseDetails } = state;
 
   const lastMessage = messages[messages.length - 1];
-  if (
-    lastMessage._getType() !== "ai" ||
-    !(lastMessage as AIMessage).tool_calls?.length
-  ) {
+
+  // Cast here since `tool_calls` does not exist on `BaseMessage`
+  const messageCastAI = lastMessage as AIMessage;
+  if (messageCastAI._getType() !== "ai" || !messageCastAI.tool_calls?.length) {
     // LLM did not call any tools, or it's not an AI message, so we should end.
     return END;
   }
+
   // If `requestedStockPurchaseDetails` is present, we want to execute the purchase
   if (requestedStockPurchaseDetails) {
     return "execute_purchase";
   }
 
-  const { tool_calls } = lastMessage as AIMessage;
+  const { tool_calls } = messageCastAI;
   if (!tool_calls?.length) {
     throw new Error(
       "Expected tool_calls to be an array with at least one element"
@@ -117,8 +112,10 @@ const findCompanyName = async (companyName: string) => {
     { name: "extract_ticker" }
   );
   const extractedTicker = await llmWithTickerOutput.invoke([
-    "human",
-    `Given the following search results, extract the ticker symbol for ${companyName}:\n${searchResults}`,
+    {
+      role: "user",
+      content: `Given the following search results, extract the ticker symbol for ${companyName}:\n${searchResults}`,
+    },
   ]);
 
   return extractedTicker.ticker;
@@ -131,8 +128,9 @@ const preparePurchaseDetails = async (state: typeof GraphAnnotation.State) => {
     throw new Error("Expected the last message to be an AI message");
   }
 
-  const lastAIMessage = lastMessage as AIMessage;
-  const purchaseStockTool = lastAIMessage.tool_calls?.find(
+  // Cast here since `tool_calls` does not exist on `BaseMessage`
+  const messageCastAI = lastMessage as AIMessage;
+  const purchaseStockTool = messageCastAI.tool_calls?.find(
     (tc) => tc.name === "purchase_stock"
   );
   if (!purchaseStockTool) {
@@ -140,40 +138,41 @@ const preparePurchaseDetails = async (state: typeof GraphAnnotation.State) => {
       "Expected the last AI message to have a purchase_stock tool call"
     );
   }
-
-  if (!purchaseStockTool.args.ticker && !purchaseStockTool.args.companyName) {
-    // The user did not provide the ticker or the company name.
-    // Ask the user for the missing information. Also, if the last message had a tool call
-    // we need to add ToolMessages to the messages array.
-    const toolMessages = lastAIMessage.tool_calls?.map((tc) => {
-      return new ToolMessage({
-        name: tc.name,
-        content: "Please provide the missing information.",
-        tool_call_id: tc.id ?? "",
-      });
-    });
-    return {
-      messages: [
-        ...(toolMessages ?? []),
-        new AIMessage(
-          "Please provide either the company ticker or the company name to purchase stock."
-        ),
-      ],
-    };
-  }
-  let { maxPurchasePrice, ticker } = purchaseStockTool.args;
-  if (!ticker && purchaseStockTool.args.companyName) {
-    // The user did not provide the ticker, but did provide the company name.
-    // Call the `findCompanyName` tool to get the ticker.
-    ticker = await findCompanyName(purchaseStockTool.args.companyName);
-  }
+  let { maxPurchasePrice, companyName, ticker } = purchaseStockTool.args;
 
   if (!ticker) {
-    throw new Error("Failed to find the ticker symbol for the company");
+    if (!companyName) {
+      // The user did not provide the ticker or the company name.
+      // Ask the user for the missing information. Also, if the
+      // last message had a tool call we need to add a tool message
+      // to the messages array.
+      const toolMessages = messageCastAI.tool_calls?.map((tc) => {
+        return {
+          role: "tool",
+          content: `Please provide the missing information for the ${tc.name} tool.`,
+          id: tc.id,
+        };
+      });
+
+      return {
+        messages: [
+          ...(toolMessages ?? []),
+          {
+            role: "assistant",
+            content:
+              "Please provide either the company ticker or the company name to purchase stock.",
+          },
+        ],
+      };
+    } else {
+      // The user did not provide the ticker, but did provide the company name.
+      // Call the `findCompanyName` tool to get the ticker.
+      ticker = await findCompanyName(purchaseStockTool.args.companyName);
+    }
   }
 
   if (!maxPurchasePrice) {
-    // call the `priceSnapshotTool` to fetch the current price
+    // If `maxPurchasePrice` is not defined, default to the current price.
     const priceSnapshot = await priceSnapshotTool.invoke({ ticker });
     maxPurchasePrice = priceSnapshot.snapshot.price;
   }
@@ -182,7 +181,7 @@ const preparePurchaseDetails = async (state: typeof GraphAnnotation.State) => {
   return {
     requestedStockPurchaseDetails: {
       ticker,
-      quantity: purchaseStockTool.args.quantity ?? 1,
+      quantity: purchaseStockTool.args.quantity ?? 1, // Default to one if not provided.
       maxPurchasePrice,
     },
   };
@@ -202,10 +201,12 @@ const executePurchase = async (state: typeof GraphAnnotation.State) => {
   // Execute the purchase. In this demo we'll just return a success message.
   return {
     messages: [
-      new AIMessage(
-        `Successfully purchases ${quantity} share(s) of ` +
-          `${ticker} at $${maxPurchasePrice}/share.`
-      ),
+      {
+        role: "assistant",
+        content:
+          `Successfully purchases ${quantity} share(s) of ` +
+          `${ticker} at $${maxPurchasePrice}/share.`,
+      },
     ],
   };
 };

@@ -19,7 +19,7 @@ const systemMessage = new SystemMessage(
   "You're an expert financial analyst, tasked with answering the users questions " +
     "about a given company or companies. You do not have up to date information on " +
     "the companies, so you much call tools when answering users questions. " +
-    "All finical data tools require a company ticker to be passed in as a parameter. If you " +
+    "All financial data tools require a company ticker to be passed in as a parameter. If you " +
     "do not know the ticker, you should use the webs search tool to find it."
 );
 
