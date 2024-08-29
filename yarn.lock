@@ -235,6 +235,18 @@
   dependencies:
     uuid "^10.0.0"
 
+"@langchain/langgraph@^0.1.10-rc.1":
+  version "0.1.10-rc.1"
+  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.1.10-rc.1.tgz#8ac8c251de8474737a3b8ea3a620f33ca7e9fc36"
+  integrity sha512-tO9IJ1uAM5RZjlYGqOt3E3WC09UwmYd5iXvZABAjMNL+82FkFnVuj2KBsgi3qhS15bkELHYHCWPmIFFVSmIrUw==
+  dependencies:
+    "@langchain/core" ">=0.2.31 <0.3.0"
+    "@langchain/langgraph-checkpoint" "~0.0.4"
+    "@langchain/langgraph-checkpoint-sqlite" "~0.0.1"
+    double-ended-queue "^2.1.0-0"
+    uuid "^10.0.0"
+    zod "^3.23.8"
+
 "@langchain/langgraph@^0.1.9":
   version "0.1.9"
   resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.1.9.tgz#1bbcdb471f7f1440e16072c2770dc76208b2eba0"
