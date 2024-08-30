@@ -93,53 +93,51 @@ const workflow = new StateGraph(GraphAnnotation)
   .addEdge("tools", "agent")
   .addConditionalEdges("agent", shouldContinue, ["tools", END]);
 
-
 export const graph = workflow.compile({
-  // Uncomment below to run programmatically.
-  // checkpointer: new MemorySaver(),
+  checkpointer: new MemorySaver(),
 });
 
-// async function main() {
-//   const config = {
-//     configurable: { thread_id: "refunder_dynamic" },
-//     streamMode: "updates" as const,
-//   };
-//   const input = {
-//     messages: [
-//       {
-//         role: "user",
-//         content: "Can I have a refund for my purchase? Order no. 123",
-//       },
-//     ],
-//   };
+async function main() {
+  const config = {
+    configurable: { thread_id: "refunder_dynamic" },
+    streamMode: "updates" as const,
+  };
+  const input = {
+    messages: [
+      {
+        role: "user",
+        content: "Can I have a refund for my purchase? Order no. 123",
+      },
+    ],
+  };
 
-//   for await (const event of await graph.stream(input, config)) {
-//     const key = Object.keys(event)[0];
-//     if (key) {
-//       console.log(`Event: ${key}\n`);
-//     }
-//   }
+  for await (const event of await graph.stream(input, config)) {
+    const key = Object.keys(event)[0];
+    if (key) {
+      console.log(`Event: ${key}\n`);
+    }
+  }
 
-//   console.log("\n---INTERRUPTING GRAPH TO UPDATE STATE---\n\n");
+  console.log("\n---INTERRUPTING GRAPH TO UPDATE STATE---\n\n");
 
-//   console.log(
-//     "---refundAuthorized value before state update---",
-//     (await graph.getState(config)).values.refundAuthorized
-//   );
+  console.log(
+    "---refundAuthorized value before state update---",
+    (await graph.getState(config)).values.refundAuthorized
+  );
 
-//   await graph.updateState(config, { refundAuthorized: true });
+  await graph.updateState(config, { refundAuthorized: true });
 
-//   console.log(
-//     "---refundAuthorized value after state update---",
-//     (await graph.getState(config)).values.refundAuthorized
-//   );
+  console.log(
+    "---refundAuthorized value after state update---",
+    (await graph.getState(config)).values.refundAuthorized
+  );
 
-//   console.log("\n---CONTINUING GRAPH AFTER STATE UPDATE---\n\n");
+  console.log("\n---CONTINUING GRAPH AFTER STATE UPDATE---\n\n");
 
-//   for await (const event of await graph.stream(null, config)) {
-//     // Log the event to the terminal
-//     logEvent(event);
-//   }
-// }
+  for await (const event of await graph.stream(null, config)) {
+    // Log the event to the terminal
+    logEvent(event);
+  }
+}
 
-// main();
+main();

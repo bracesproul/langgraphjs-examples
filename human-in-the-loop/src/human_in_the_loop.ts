@@ -43,11 +43,7 @@ const tools = [processRefundTool];
 const callTool = async (state: typeof GraphAnnotation.State) => {
   const { messages, refundAuthorized } = state;
   if (!refundAuthorized) {
-    return {
-      messages: [
-        { role: "tool", content: "Permission to refund is required." },
-      ],
-    };
+    throw new Error("Permission to refund is required.");
   }
 
   const lastMessage = messages[messages.length - 1];
@@ -95,8 +91,6 @@ const workflow = new StateGraph(GraphAnnotation)
   .addNode("tools", callTool)
   .addEdge("tools", "agent")
   .addConditionalEdges("agent", shouldContinue, ["tools", END]);
-
-const checkpointer = new MemorySaver();
 
 export const graph = workflow.compile({
   // Uncomment below to run programmatically.
