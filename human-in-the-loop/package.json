@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "yarn tsc --project tsconfig.json --outDir dist",
-    "start:update_edit_state": "tsx --experimental-wasm-modules -r dotenv/config src/update_edit_state.ts",
+    "start:hitl": "tsx --experimental-wasm-modules -r dotenv/config src/human_in_the_loop.ts",
     "start:dynamic_breakpoints": "tsx --experimental-wasm-modules -r dotenv/config src/dynamic_breakpoints.ts",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
@@ -17,7 +17,7 @@
   "dependencies": {
     "@langchain/community": "^0.2.31",
     "@langchain/core": "^0.2.31",
-    "@langchain/langgraph": "^0.1.10-rc.3",
+    "@langchain/langgraph": "^0.2.0-rc.0",
     "@langchain/langgraph-checkpoint": "^0.0.4",
     "@langchain/openai": "^0.2.8",
     "zod": "^3.23.8"
