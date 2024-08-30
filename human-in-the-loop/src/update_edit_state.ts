@@ -10,6 +10,7 @@ import { type AIMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
+import { logLastMessageToolCalls, logStateUpdate, logEvent } from "utils.js";
 
 const llm = new ChatOpenAI({
   model: "gpt-4o",
@@ -86,55 +87,30 @@ async function main() {
 
   console.log("\n---INTERRUPTING GRAPH TO UPDATE STATE---\n\n");
 
-  const currentState = await graph.getState(config);
-  const lastMessage =
-    currentState.values.messages[currentState.values.messages.length - 1];
-  console.log("Last message tool calls:", {
-    name: lastMessage.tool_calls[0].name,
-    args: lastMessage.tool_calls[0].args,
-  });
+  const { values } = await graph.getState(config);
 
-  console.log(
-    "Updating state to:",
-    {
-      buildup: "Why did the scarecrow win an award?",
-      punchline: "Because he was outstanding in his field!",
-    },
-    "\n"
-  );
+  // Extract the last message from the current state
+  const lastMessage = values.messages[values.messages.length - 1];
 
-  lastMessage.tool_calls[0].args.buildup =
-    "Why did the scarecrow win an award?";
-  lastMessage.tool_calls[0].args.punchline =
-    "Because he was outstanding in his field!";
+  // Log the last message tool calls to the terminal
+  logLastMessageToolCalls(lastMessage);
+
+  const newBuildup = "Why did the scarecrow win an award?";
+  const newPunchline = "Because he was outstanding in his field!";
+
+  // Log the new buildup and punchline to the terminal
+  logStateUpdate(newBuildup, newPunchline);
+
+  lastMessage.tool_calls[0].args.buildup = newBuildup;
+  lastMessage.tool_calls[0].args.punchline = newPunchline;
 
   await graph.updateState(config, { messages: lastMessage });
 
   console.log("\n---CONTINUING GRAPH AFTER STATE UPDATE---\n\n");
 
   for await (const event of await graph.stream(null, config)) {
-    const key = Object.keys(event)[0];
-    if (key) {
-      console.log(`Event: ${key}`);
-      if (Array.isArray(event[key].messages)) {
-        const lastMsg = event[key].messages[event[key].messages.length - 1];
-        console.log(
-          {
-            role: lastMsg._getType(),
-            content: lastMsg.content,
-          },
-          "\n"
-        );
-      } else {
-        console.log(
-          {
-            role: event[key].messages._getType(),
-            content: event[key].messages.content,
-          },
-          "\n"
-        );
-      }
-    }
+    // Log the event to the terminal
+    logEvent(event);
   }
 }
 
