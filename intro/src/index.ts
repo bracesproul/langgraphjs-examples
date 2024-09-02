@@ -7,19 +7,24 @@ import {
 } from "@langchain/langgraph";
 import { AIMessage, BaseMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
-import { SIMPLE_TOOLS_LIST } from "tools.js";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 
 const llm = new ChatOpenAI({
   model: "gpt-4o",
   temperature: 0,
 });
 
-const toolNode = new ToolNode(SIMPLE_TOOLS_LIST);
+const webSearchTool = new TavilySearchResults({
+  maxResults: 4,
+});
+const tools = [webSearchTool];
+
+const toolNode = new ToolNode(tools);
 
 const callModel = async (state: typeof MessagesAnnotation.State) => {
   const { messages } = state;
 
-  const llmWithTools = llm.bindTools(SIMPLE_TOOLS_LIST);
+  const llmWithTools = llm.bindTools(tools);
   const result = await llmWithTools.invoke(messages);
   return { messages: [result] };
 };

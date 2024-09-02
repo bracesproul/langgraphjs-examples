@@ -3,7 +3,7 @@
   "dockerfile_lines": [],
   "dependencies": ["."],
   "graphs": {
-    "stock_purchaser_agent": "./src/stock_purchaser.ts:graph"
+    "simple_agent": "./src/index.ts:graph"
   },
   "env": "../.env"
 }
