@@ -44,7 +44,7 @@ const callModel = async (state: typeof GraphAnnotation.State) => {
       "about a given company or companies. You do not have up to date information on " +
       "the companies, so you much call tools when answering users questions. " +
       "All financial data tools require a company ticker to be passed in as a parameter. If you " +
-      "do not know the ticker, you should use the webs search tool to find it.",
+      "do not know the ticker, you should use the web search tool to find it.",
   };
 
   const llmWithTools = llm.bindTools(ALL_TOOLS_LIST);
@@ -204,7 +204,7 @@ const executePurchase = async (state: typeof GraphAnnotation.State) => {
       {
         role: "assistant",
         content:
-          `Successfully purchases ${quantity} share(s) of ` +
+          `Successfully purchased ${quantity} share(s) of ` +
           `${ticker} at $${maxPurchasePrice}/share.`,
       },
     ],
