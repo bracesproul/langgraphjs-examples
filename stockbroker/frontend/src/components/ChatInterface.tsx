@@ -160,7 +160,10 @@ export default function ChatInterface() {
           )}
         </div>
       )}
-      <InputArea onSendMessage={handleSendMessage} />
+      <InputArea
+        disabled={!!graphInterrupted && !!threadState && !!threadId}
+        onSendMessage={handleSendMessage}
+      />
     </div>
   );
 }
