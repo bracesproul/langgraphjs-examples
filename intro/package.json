@@ -16,7 +16,7 @@
   "dependencies": {
     "@langchain/community": "^0.2.31",
     "@langchain/core": "^0.2.31",
-    "@langchain/langgraph": "^0.2.0-rc.0",
+    "@langchain/langgraph": "^0.2.0",
     "@langchain/openai": "^0.2.8",
     "zod": "^3.23.8"
   },

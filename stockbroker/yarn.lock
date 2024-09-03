@@ -204,10 +204,10 @@
   dependencies:
     uuid "^10.0.0"
 
-"@langchain/langgraph@^0.2.0-rc.0":
-  version "0.2.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.2.0-rc.0.tgz#ead317c14fa050febb058bd712eaecd9777c7789"
-  integrity sha512-KmpWbkljzv+VZOSwr5V2DYe/v4sMI40hV1HCYGlPGj65Xw6Vwh+3xMaZ9I8SQxzXLXBbuGOahRZHmQNMWVuAyg==
+"@langchain/langgraph@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@langchain/langgraph/-/langgraph-0.2.0.tgz#d41008e93033c4d0c0f5bd962703cae69181b28a"
+  integrity sha512-JuxOB7wRum8RtglkkQypPvfQDXzWOigNZ0yHobXLb8AJSZ+kmjcviOZZb4X3EiKEg5APCIVn1c0Gjm8bwRZIjA==
   dependencies:
     "@langchain/langgraph-checkpoint" "~0.0.4"
     double-ended-queue "^2.1.0-0"
