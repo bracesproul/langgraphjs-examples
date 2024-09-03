@@ -68,7 +68,6 @@ export default function ChatInterface() {
         { text: message, sender: "user", id: uuidv4() },
       ]);
     }
-    setIsLoading(true);
 
     if (!threadId) {
       console.error("Thread ID is not available");
@@ -80,6 +79,7 @@ export default function ChatInterface() {
     }
 
     try {
+      setIsLoading(true);
       setThreadState(undefined);
       setGraphInterrupted(false);
       setAllowNullMessage(false);
@@ -107,7 +107,7 @@ export default function ChatInterface() {
         const chunk = decoder.decode(value);
         try {
           const jsonData = JSON.parse(chunk);
-          handleStreamEvent(jsonData, setMessages, setIsLoading);
+          handleStreamEvent(jsonData, setMessages);
         } catch (_) {
           console.error("Error parsing JSON data");
         }
@@ -118,6 +118,7 @@ export default function ChatInterface() {
       if (currentState.next.length) {
         setGraphInterrupted(true);
       }
+      setIsLoading(false);
     } catch (error) {
       console.error("Error streaming messages:", error);
       setIsLoading(false);
@@ -136,7 +137,7 @@ export default function ChatInterface() {
         <HomeComponent onMessageSelect={handleSendMessage} />
       ) : (
         <div ref={messageListRef} className="overflow-y-auto h-screen">
-          <MessageList messages={messages} isLoading={isLoading} />
+          <MessageList messages={messages} isLoading={false} />
           {!!graphInterrupted && !!threadState && !!threadId ? (
             <div className="flex items-center justify-start w-2/3 mx-auto">
               <GraphInterrupt

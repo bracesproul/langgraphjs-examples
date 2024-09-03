@@ -25,11 +25,14 @@ export const getThreadState = async (
 
 export const updateState = async (
   threadId: string,
-  newState: Record<string, any>
+  fields: {
+    newState: Record<string, any>;
+    asNode?: string;
+  }
 ): Promise<ThreadState<Record<string, any>>> => {
   const response = await fetch("/api/updateState", {
     method: "POST",
-    body: JSON.stringify({ threadId, newState }),
+    body: JSON.stringify({ threadId, ...fields }),
   });
   return response.json();
 };

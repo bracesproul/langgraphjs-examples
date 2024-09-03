@@ -2,10 +2,9 @@ import { Message, ToolCall } from "../types";
 
 export const handleStreamEvent = (
   event: any,
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 ) => {
-  let currentMessageId: string | undefined;
+  // let currentMessageId: string | undefined;
 
   if (event.event === "messages/partial") {
     event.data.forEach((dataItem: any) => {
@@ -57,7 +56,6 @@ export const handleStreamEvent = (
         setMessages((prevMessages) => {
           const lastMessage = prevMessages[prevMessages.length - 1];
           if (lastMessage && lastMessage.sender === "ai") {
-            setIsLoading(false);
             return [
               ...prevMessages.slice(0, -1),
               {
@@ -120,23 +118,34 @@ export const handleStreamEvent = (
         }
       });
     } else if (dataItem.type === "ai" && dataItem.content) {
-      if (!currentMessageId) {
-        currentMessageId = dataItem.id;
-      }
-
       setMessages((prevMessages) => {
-        const messageExists =
-          prevMessages.some((msg) => msg.id === dataItem.id) ||
-          currentMessageId === dataItem.id;
+        const messageExists = prevMessages.some(
+          (msg) => msg.id === dataItem.id
+        );
+        // Message already exists, don't add it again
         if (messageExists) {
           return prevMessages;
         }
+
+        const messageStreamed = prevMessages.find((msg) =>
+          dataItem.content.startsWith(msg.text)
+        );
+
+        if (messageStreamed) {
+          // Message has already partially been streamed, update it
+          return prevMessages.map((msg) => {
+            if (msg.id === messageStreamed.id) {
+              return { ...messageStreamed, text: dataItem.content };
+            }
+            return msg;
+          });
+        }
+
         return [
           ...prevMessages,
           { id: dataItem.id, text: dataItem.content, sender: "ai" },
         ];
       });
     }
-    setIsLoading(false);
   }
 };

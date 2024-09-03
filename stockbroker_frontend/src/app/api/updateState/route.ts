@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { threadId, newState } = await req.json();
+    const { threadId, newState, asNode } = await req.json();
     const client = new Client({
       apiUrl: process.env.LANGGRAPH_API_URL as string,
       apiKey: process.env.LANGCHAIN_API_KEY as string,
@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
 
     await client.threads.updateState(threadId, {
       values: newState,
+      asNode,
     });
 
     return NextResponse.json({ success: true });
