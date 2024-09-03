@@ -1,14 +1,7 @@
 import Message from "./Message";
-import SkeletonMessage from "./SkeletonMessage";
 import { Message as MessageType } from "../types";
 
-export default function MessageList({
-  messages,
-  isLoading,
-}: {
-  messages: MessageType[];
-  isLoading: boolean;
-}) {
+export default function MessageList({ messages }: { messages: MessageType[] }) {
   return (
     <div className="pb-[100px] w-2/3 mx-auto p-10 overflow-y-scroll">
       {messages.map((message, index) => (
@@ -20,7 +13,6 @@ export default function MessageList({
           />
         </div>
       ))}
-      {isLoading && <SkeletonMessage />}
     </div>
   );
 }

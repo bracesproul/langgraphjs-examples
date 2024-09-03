@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@langchain/langgraph-sdk";
 
 export async function POST(req: NextRequest) {
-  const { threadId, assistantId, message, model, userId, systemInstructions } =
-    await req.json();
+  const {
+    threadId,
+    assistantId,
+    message,
+    model,
+    userId,
+    systemInstructions,
+    messageId,
+    streamMode = "messages",
+  } = await req.json();
 
   const client = new Client({
     apiUrl: process.env.LANGGRAPH_API_URL as string,
@@ -15,6 +23,7 @@ export async function POST(req: NextRequest) {
     input = {
       messages: [
         {
+          id: messageId,
           role: "human",
           content: message,
         },
@@ -33,7 +42,7 @@ export async function POST(req: NextRequest) {
   const stream = client.runs.stream(threadId, assistantId, {
     input,
     config,
-    streamMode: "messages",
+    streamMode,
   });
 
   const encoder = new TextEncoder();
@@ -41,6 +50,7 @@ export async function POST(req: NextRequest) {
   const responseStream = new ReadableStream({
     async start(controller) {
       for await (const event of stream) {
+        console.log(event);
         controller.enqueue(encoder.encode(JSON.stringify(event)));
       }
 

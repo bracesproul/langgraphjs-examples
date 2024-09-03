@@ -1,3 +1,4 @@
+import { StreamMode } from "@/components/Settings";
 import { ThreadState } from "@langchain/langgraph-sdk";
 
 export const createAssistant = async (graphId: string) => {
@@ -41,9 +42,11 @@ export const sendMessage = async (params: {
   threadId: string;
   assistantId: string;
   message: string | null;
+  messageId: string;
   model: string;
   userId: string;
   systemInstructions: string;
+  streamMode: StreamMode;
 }) => {
   return fetch("/api/sendMessage", {
     method: "POST",

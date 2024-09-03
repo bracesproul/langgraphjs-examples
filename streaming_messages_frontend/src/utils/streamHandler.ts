@@ -1,11 +1,26 @@
+import { StreamMode } from "@/components/Settings";
 import { Message, ToolCall } from "../types";
 
 export const handleStreamEvent = (
   event: any,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
+  streamMode: StreamMode
+) => {
+  if (streamMode === "messages") {
+    handleStreamMessageEvent(event, setMessages);
+  } else if (streamMode === "events") {
+    handleStreamEventEvent(event, setMessages);
+  } else if (streamMode === "updates") {
+    handleStreamUpdatesEvent(event, setMessages);
+  } else if (streamMode === "values") {
+    handleStreamValuesEvent(event, setMessages);
+  }
+};
+
+const handleStreamMessageEvent = (
+  event: any,
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 ) => {
-  // let currentMessageId: string | undefined;
-
   if (event.event === "messages/partial") {
     event.data.forEach((dataItem: any) => {
       if (
@@ -55,13 +70,12 @@ export const handleStreamEvent = (
       } else if (dataItem.content) {
         setMessages((prevMessages) => {
           const lastMessage = prevMessages[prevMessages.length - 1];
-          if (lastMessage && lastMessage.sender === "ai") {
+          if (lastMessage && dataItem.id === lastMessage.id) {
             return [
               ...prevMessages.slice(0, -1),
               {
                 ...lastMessage,
                 text: dataItem.content,
-                toolCalls: lastMessage.toolCalls || [],
               },
             ];
           } else {
@@ -147,5 +161,103 @@ export const handleStreamEvent = (
         ];
       });
     }
+  }
+};
+
+const handleStreamEventEvent = (
+  event: any,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+) => {
+  throw new Error("Stream events not currently supported.");
+};
+
+const handleStreamUpdatesEvent = (
+  event: any,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+) => {
+  console.log("update received", event);
+  if (event.event !== "updates") {
+    // Not an update, return
+    return;
+  }
+
+  const nodeKey = Object.keys(event.data)[0];
+  const data = event.data[nodeKey];
+  if (!("messages" in data)) {
+    console.log("No messages found in data");
+    // messages were not updated, return.
+    return;
+  }
+
+  const { messages } = data;
+  const messagesArray = Array.isArray(messages) ? messages : [messages];
+  messagesArray.forEach((msg: any) => {
+    handleExtractingMessageUpdate(msg, setMessages);
+  });
+};
+
+const handleStreamValuesEvent = (
+  event: any,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+) => {
+  if (event.event !== "values") {
+    // Not an update, return
+    return;
+  }
+
+  event.data.messages.forEach((msg: any) => {
+    handleExtractingMessageUpdate(msg, setMessages);
+  });
+};
+
+const handleExtractingMessageUpdate = (
+  message: any,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+) => {
+  if (message.type === "tool") {
+    const toolCallId = message.tool_call_id;
+    // Search for the message that the tool call is associated with, and update the `result` field of the tool call
+    setMessages((prevMessages) => {
+      const newMessages = prevMessages.map((prevMsg: any) => {
+        if (
+          "toolCalls" in prevMsg &&
+          Array.isArray(prevMsg.toolCalls) &&
+          prevMsg.toolCalls?.length &&
+          prevMsg.toolCalls.find((tc: ToolCall) => tc.id === toolCallId)
+        ) {
+          return {
+            ...prevMsg,
+            toolCalls: prevMsg.toolCalls.map((tc: ToolCall) => {
+              if (tc.id === toolCallId) {
+                return {
+                  ...tc,
+                  result: message.content,
+                };
+              } else {
+                return tc;
+              }
+            }),
+          };
+        }
+        return prevMsg;
+      });
+      return newMessages;
+    });
+  } else if (message.type === "ai") {
+    setMessages((prevMessages) => {
+      if (prevMessages.find((m) => m.id === message.id)) {
+        return prevMessages;
+      } else {
+        return [
+          ...prevMessages,
+          {
+            text: message.content,
+            sender: "ai",
+            toolCalls: message.tool_calls,
+            id: message.id,
+          },
+        ];
+      }
+    });
   }
 };

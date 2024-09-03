@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import MessageList from "./MessageList";
 import InputArea from "./InputArea";
 import HomeComponent from "./HomeComponent";
-import Settings from "./Settings";
+import Settings, { StreamMode } from "./Settings";
 import { Message, Model } from "../types";
 import { handleStreamEvent } from "../utils/streamHandler";
 import {
@@ -24,6 +24,7 @@ export default function ChatInterface() {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [assistantId, setAssistantId] = useState<string | null>(null);
   const [model, setModel] = useState<Model>("gpt-4o-mini" as Model);
+  const [streamMode, setStreamMode] = useState<StreamMode>("messages");
   const [userId, setUserId] = useState<string>("");
   const [systemInstructions, setSystemInstructions] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -62,10 +63,11 @@ export default function ChatInterface() {
   }, [messages]);
 
   const handleSendMessage = async (message: string | null) => {
+    const messageId = uuidv4();
     if (message !== null) {
       setMessages([
         ...messages,
-        { text: message, sender: "user", id: uuidv4() },
+        { text: message, sender: "user", id: messageId },
       ]);
     }
 
@@ -87,9 +89,11 @@ export default function ChatInterface() {
         threadId,
         assistantId,
         message,
+        messageId,
         model,
         userId,
         systemInstructions,
+        streamMode,
       });
 
       const reader = response.body?.getReader();
@@ -107,7 +111,7 @@ export default function ChatInterface() {
         const chunk = decoder.decode(value);
         try {
           const jsonData = JSON.parse(chunk);
-          handleStreamEvent(jsonData, setMessages);
+          handleStreamEvent(jsonData, setMessages, streamMode);
         } catch (_) {
           console.error("Error parsing JSON data");
         }
@@ -132,12 +136,14 @@ export default function ChatInterface() {
         onSystemInstructionsChange={setSystemInstructions}
         currentModel={model as any}
         currentSystemInstructions={systemInstructions}
+        onStreamModeChange={setStreamMode}
+        currentStreamMode={streamMode}
       />
       {messages.length === 0 ? (
         <HomeComponent onMessageSelect={handleSendMessage} />
       ) : (
         <div ref={messageListRef} className="overflow-y-auto h-screen">
-          <MessageList messages={messages} isLoading={false} />
+          <MessageList messages={messages} />
           {!!graphInterrupted && !!threadState && !!threadId ? (
             <div className="flex items-center justify-start w-2/3 mx-auto">
               <GraphInterrupt

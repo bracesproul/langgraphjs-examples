@@ -23,7 +23,7 @@ export default function Message({
     <div
       className={`flex ${
         isBot ? "justify-start" : "justify-end"
-      } mb-4 relative transition-opacity duration-1000 ease-in-out ${
+      } mb-4 relative transition-opacity duration-200 ease-in-out ${
         isVisible ? "opacity-100" : "opacity-0"
       }`}
     >
