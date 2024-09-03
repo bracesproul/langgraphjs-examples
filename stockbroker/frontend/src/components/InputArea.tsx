@@ -2,12 +2,15 @@ import { useState } from "react";
 
 export default function InputArea({
   onSendMessage,
+  disabled,
 }: {
   onSendMessage: (message: string) => void;
+  disabled: boolean;
 }) {
   const [input, setInput] = useState("");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (disabled) return;
     e.preventDefault();
     if (input.trim()) {
       onSendMessage(input);
@@ -26,8 +29,13 @@ export default function InputArea({
           placeholder="Message StreamChat"
         />
         <button
+          disabled={disabled}
           type="submit"
-          className=" absolute right-[10px] bottom-[10px] w-[40px] h-[40px] rounded-[20px] bg-[#676767] text-white  hover:opacity-80 flex items-center justify-center"
+          className={`absolute right-[10px] bottom-[10px] w-[40px] h-[40px] rounded-[20px] text-white flex items-center justify-center transition-colors ${
+            disabled
+              ? "bg-[#4a4a4a] cursor-not-allowed"
+              : "bg-[#676767] hover:bg-[#7a7a7a]"
+          }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -35,6 +43,7 @@ export default function InputArea({
             height="24"
             fill="none"
             viewBox="0 0 24 24"
+            className={disabled ? "opacity-50" : ""}
           >
             <path
               fill="currentColor"

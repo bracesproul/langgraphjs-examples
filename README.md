@@ -3,13 +3,16 @@
 This repository contains a series of example TypeScript projects which implement LangGraph.js agents.
 Each directory focuses on a different problem which LangGraph.js aims to solve/enable solutions for.
 
-## Intro
+## Prerequisites
 
-The code for the introduction video can be found in the [`./intro`](./intro) directory.
-This directory contains a single graph, located inside the `index.ts` file.
-To run this graph, OpenAI and Tavily API keys are required. You can get API keys from the following links:
+The following projects all use [LangSmith](https://smith.langchain.com/), LangGraph [Studio](https://github.com/langchain-ai/langgraph-studio) and [Cloud](https://langchain-ai.github.io/langgraph/cloud/), as well as the [LangGraph.js](https://langchain-ai.github.io/langgraphjs/) and [LangChain.js](https://js.langchain.com/v0.2/docs/introduction/) libraries.
 
-- OpenAI: https://platform.openai.com/signup
-- Tavily: https://tavily.com/
+Before jumping into any of the projects, you should create a LangSmith account [here](https://smith.langchain.com/), and download the latest LangGraph Studio version [here](https://github.com/langchain-ai/langgraph-studio/releases/latest).
 
-The single graph is named `simple_agent`, specified by the `langgraph.json` configuration file.
+Running LangGraph Studio locally requires [Docker](https://www.docker.com/), so ensure you have it installed _and_ running before starting the Studio (I personally use [OrbStack](https://orbstack.dev/) to manage my Docker containers, which is free to use for personal use).
+
+## Projects
+
+- [Intro](./intro/README.md) - Introduction to LangGraph.js, Studio, and Cloud.
+- [Human in the Loop](./human_in_the_loop/README.md) - Introduction to Human in the Loop (HITL) concepts.
+- [Stockbroker](./stockbroker/README.md) - Advanced HITL example with a stockbroker agent.
