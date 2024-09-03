@@ -16,8 +16,7 @@
   "dependencies": {
     "@langchain/community": "^0.2.31",
     "@langchain/core": "^0.2.31",
-    "@langchain/langgraph": "^0.2.0",
-    "@langchain/langgraph-checkpoint": "^0.0.4",
+    "@langchain/langgraph": "^0.2.1-rc.1",
     "@langchain/openai": "^0.2.8",
     "zod": "^3.23.8"
   },
@@ -33,10 +32,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-unused-imports": "^3.0.0",
     "prettier": "^2.8.3",
-    "tsx": "^3.12.3",
+    "tsx": "^4.19.0",
     "typescript": "^5.0.0"
-  },
-  "resolutions": {
-    "@langchain/core": "0.2.31"
   }
 }

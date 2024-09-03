@@ -24,7 +24,7 @@ const GraphAnnotation = Annotation.Root({
     reducer: (_, update) => update, // Always overwrite the state if a new value is provided.
     default: () => null,
   }),
-  purchaseConfirmed: Annotation<boolean>,
+  purchaseConfirmed: Annotation<boolean | undefined>,
 });
 
 const llm = new ChatOpenAI({
@@ -227,8 +227,8 @@ const workflow = new StateGraph(GraphAnnotation)
     "execute_purchase",
   ]);
 
-const checkpointer = new MemorySaver();
-
 export const graph = workflow.compile({
-  checkpointer,
+  // The LangGraph Studio/Cloud API will automatically add a checkpointer
+  // only uncomment if running locally
+  // checkpointer: new MemorySaver(),
 });
