@@ -19,10 +19,7 @@ import { z } from "zod";
 
 const GraphAnnotation = Annotation.Root({
   ...MessagesAnnotation.spec,
-  requestedStockPurchaseDetails: Annotation<StockPurchase | null>({
-    reducer: (_, update) => update, // Always overwrite the state if a new value is provided.
-    default: () => null,
-  }),
+  requestedStockPurchaseDetails: Annotation<StockPurchase>,
   purchaseConfirmed: Annotation<boolean | undefined>,
 });
 
@@ -76,21 +73,11 @@ const shouldContinue = (state: typeof GraphAnnotation.State) => {
   }
 
   return tool_calls.map((tc) => {
-    // Map the tool call to the proper node.
-    switch (tc.name) {
-      case "income_statements":
-      case "balance_sheets":
-      case "cash_flow_statements":
-      case "company_facts":
-      case "price_snapshot":
-      case webSearchTool.name:
-        // Generic tool is called, so we should call `ToolNode`.
-        return "tools";
-      case "purchase_stock":
-        // The user is trying to purchase a stock, route to the verify purchase node.
-        return "prepare_purchase_details";
-      default:
-        throw new Error(`Unexpected tool call: ${tc.name}`);
+    if (tc.name === "purchase_stock") {
+      // The user is trying to purchase a stock, route to the verify purchase node.
+      return "prepare_purchase_details";
+    } else {
+      return "tools";
     }
   });
 };
