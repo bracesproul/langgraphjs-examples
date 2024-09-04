@@ -1,0 +1,10 @@
+{
+  "buildCommand": "yarn build",
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/openapi.json",
+      "destination": "/api/openapi.json"
+    }
+  ]
+}
