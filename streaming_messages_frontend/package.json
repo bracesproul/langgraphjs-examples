@@ -1,0 +1,36 @@
+{
+  "name": "streaming_chat_frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --config .prettierrc --write \"src\""
+  },
+  "dependencies": {
+    "@langchain/langgraph-sdk": "^0.0.8",
+    "js-cookie": "^3.0.5",
+    "next": "14.2.7",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-json-view": "^1.21.3",
+    "react-markdown": "^9.0.1",
+    "tailwind-scrollbar-hide": "^1.1.7",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.7",
+    "postcss": "^8",
+    "prettier": "^3.3.3",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
