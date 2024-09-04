@@ -6,7 +6,7 @@ This directory contains two graphs, located inside the [`dynamic_breakpoints.ts`
 The dynamic breakpoints graph is not set in the LangGraph config, as it's meant to be a demonstration of how to run it programmatically.
 Because of this, there is also a `main` function inside the file which contains the logic necessary to invoke the graph, update the state, and then re-invoke the graph, carrying on where it left off.
 
-## YouTube Video (Coming soon)
+## [YouTube Video](https://www.youtube.com/watch?v=gm-WaPTFQqM)
 
 ## Setup
 
