@@ -8,13 +8,17 @@ The backend contains a LangGraph agent which powers the core functionality of th
 
 The stockbroker agent is publicly accessible through two interfaces:
 
-1. LangGraph Cloud Deployment:
-   - API Documentation: https://stockbrokeragent-bracesprouls-projects.vercel.app/docs
-   - This allows direct interaction with the agent's API.
+1. API:
+> The Cloud API for the stockbroker agent is publicly accessible at the following URL: `https://stockbrokeragent-bracesprouls-projects.vercel.app/api`
+> 
+> You can find the REST documentation for the stockbroker agent [here](https://stockbrokeragent-bracesprouls-projects.vercel.app/api/docs).
+> 
+> *Note* The rest documentation will not have the proper API URL listed, because we're wrapping the Cloud API in a Vercel edge function so that anyone can access it without needing an API key. Instead of using the API URL listed in the documentation, you should use the URL listed above.
 
 2. Web-based Chat Interface:
-   - URL: https://stockbrokeragent-bracesprouls-projects.vercel.app
-   - Provides a user-friendly chatbot interface for interacting with the stockbroker agent
+> To go along with the API, we've also deployed this web-based chat interface for the stockbroker agent.
+>
+> You can access, and interact with it [here](https://stockbrokeragent-bracesprouls-projects.vercel.app).
 
 ## YouTube Video (Coming soon)
 
