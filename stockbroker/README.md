@@ -20,7 +20,7 @@ The stockbroker agent is publicly accessible through two interfaces:
 >
 > You can access, and interact with it [here](https://stockbrokeragent-bracesprouls-projects.vercel.app).
 
-## YouTube Video (Coming soon)
+## [YouTube Video](https://youtu.be/td7qNK8_H-0)
 
 ## Setup
 
