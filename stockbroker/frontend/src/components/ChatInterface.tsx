@@ -92,26 +92,10 @@ export default function ChatInterface() {
         systemInstructions,
       });
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        console.error("Response body is not readable");
-        return;
+      for await (const chunk of response) {
+        handleStreamEvent(chunk, setMessages);
       }
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        try {
-          const jsonData = JSON.parse(chunk);
-          handleStreamEvent(jsonData, setMessages);
-        } catch (_) {
-          console.error("Error parsing JSON data");
-        }
-      }
       // Fetch the current state of the thread
       const currentState = await getThreadState(threadId);
       setThreadState(currentState);
