@@ -4,6 +4,18 @@ The code for the Stockbroker Human in the Loop video can be found in this direct
 The `frontend` directory contains a Next.js application which allows you to interact with the Stockbroker agent via a chat interface.
 The backend contains a LangGraph agent which powers the core functionality of the stockbroker.
 
+## Deployment
+
+The stockbroker agent is publicly accessible through two interfaces:
+
+1. LangGraph Cloud Deployment:
+   - API Documentation: https://stockbrokeragent-bracesprouls-projects.vercel.app/docs
+   - This allows direct interaction with the agent's API.
+
+2. Web-based Chat Interface:
+   - URL: https://stockbrokeragent-bracesprouls-projects.vercel.app
+   - Provides a user-friendly chatbot interface for interacting with the stockbroker agent
+
 ## YouTube Video (Coming soon)
 
 ## Setup

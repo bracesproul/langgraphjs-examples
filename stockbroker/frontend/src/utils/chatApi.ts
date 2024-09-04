@@ -1,26 +1,27 @@
-import { ThreadState } from "@langchain/langgraph-sdk";
+import { ThreadState, Client } from "@langchain/langgraph-sdk";
+
+const createClient = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+  return new Client({
+    apiUrl,
+  });
+};
 
 export const createAssistant = async (graphId: string) => {
-  const response = await fetch("/api/createAssistant", {
-    method: "POST",
-    body: JSON.stringify({ graphId }),
-  });
-  return response.json();
+  const client = createClient();
+  return client.assistants.create({ graphId });
 };
 
 export const createThread = async () => {
-  const response = await fetch("/api/createThread", { method: "POST" });
-  return response.json();
+  const client = createClient();
+  return client.threads.create();
 };
 
 export const getThreadState = async (
   threadId: string
 ): Promise<ThreadState<Record<string, any>>> => {
-  const response = await fetch("/api/getThreadState", {
-    method: "POST",
-    body: JSON.stringify({ threadId }),
-  });
-  return response.json();
+  const client = createClient();
+  return client.threads.getState(threadId);
 };
 
 export const updateState = async (
@@ -29,12 +30,12 @@ export const updateState = async (
     newState: Record<string, any>;
     asNode?: string;
   }
-): Promise<ThreadState<Record<string, any>>> => {
-  const response = await fetch("/api/updateState", {
-    method: "POST",
-    body: JSON.stringify({ threadId, ...fields }),
+) => {
+  const client = createClient();
+  return client.threads.updateState(threadId, {
+    values: fields.newState,
+    asNode: fields.asNode,
   });
-  return response.json();
 };
 
 export const sendMessage = async (params: {
@@ -45,9 +46,30 @@ export const sendMessage = async (params: {
   userId: string;
   systemInstructions: string;
 }) => {
-  return fetch("/api/sendMessage", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
+  const client = createClient();
+
+  let input: Record<string, any> | null = null;
+  if (params.message !== null) {
+    input = {
+      messages: [
+        {
+          role: "human",
+          content: params.message,
+        },
+      ],
+      userId: params.userId,
+    };
+  }
+  const config = {
+    configurable: {
+      model_name: params.model,
+      system_instructions: params.systemInstructions,
+    },
+  };
+
+  return client.runs.stream(params.threadId, params.assistantId, {
+    input,
+    config,
+    streamMode: "messages",
   });
 };
