@@ -1,7 +1,7 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { logUpdateEvent } from "utils.js";
 /**
- * Stream Events
+ * Stream Updates
  *
  * What is it:
  * The "updates" stream mode will stream back only the updates returned

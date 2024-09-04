@@ -1,7 +1,7 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { logValuesEvent } from "utils.js";
 /**
- * Stream Events
+ * Stream Values
  *
  * What is it:
  * The "values" stream mode will stream back the thread state any time it changes.

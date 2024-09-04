@@ -1,7 +1,7 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { logMessageEvent } from "utils.js";
 /**
- * Stream Events
+ * Stream Messages
  *
  * What is it:
  * The "messages" stream mode will stream back chat messages from the
