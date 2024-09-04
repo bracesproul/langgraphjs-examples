@@ -1,0 +1,10 @@
+{
+  "node_version": "20",
+  "dockerfile_lines": [],
+  "dependencies": ["."],
+  "graphs": {
+    "human_in_the_loop": "./src/human_in_the_loop.ts:graph"
+  },
+  "env": ".env"
+}
+
