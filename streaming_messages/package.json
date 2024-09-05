@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "build": "yarn tsc --project tsconfig.json --outDir dist",
-    "start:events": "tsx --experimental-wasm-modules -r dotenv/config src/stream_events.ts",
-    "start:messages": "tsx --experimental-wasm-modules -r dotenv/config src/stream_messages.ts",
-    "start:updates": "tsx --experimental-wasm-modules -r dotenv/config src/stream_updates.ts",
-    "start:values": "tsx --experimental-wasm-modules -r dotenv/config src/stream_values.ts",
+    "start:events": "tsx --experimental-wasm-modules -r dotenv/config src/runnable/stream_events.ts",
+    "start:messages": "tsx --experimental-wasm-modules -r dotenv/config src/runnable/stream_messages.ts",
+    "start:updates": "tsx --experimental-wasm-modules -r dotenv/config src/runnable/stream_updates.ts",
+    "start:values": "tsx --experimental-wasm-modules -r dotenv/config src/runnable/stream_values.ts",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
     "format": "prettier --write \"**/*.ts\"",
@@ -17,7 +17,11 @@
   "author": "Brace Sproul",
   "license": "MIT",
   "dependencies": {
-    "@langchain/langgraph-sdk": "^0.0.8"
+    "@langchain/community": "^0.2.32",
+    "@langchain/core": "^0.2.31",
+    "@langchain/langgraph": "^0.2.2",
+    "@langchain/langgraph-sdk": "^0.0.8",
+    "@langchain/openai": "^0.2.10"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
