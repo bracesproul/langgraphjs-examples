@@ -168,7 +168,14 @@ const handleStreamEventEvent = (
   event: any,
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 ) => {
-  throw new Error("Stream events not currently supported.");
+  if (event.event !== "events") return;
+  const data = event.data;
+  setMessages((prevMessages) => {
+    return [
+      ...prevMessages,
+      { rawResponse: data, sender: "ai", id: data.run_id },
+    ];
+  });
 };
 
 const handleStreamUpdatesEvent = (
@@ -180,19 +187,12 @@ const handleStreamUpdatesEvent = (
     // Not an update, return
     return;
   }
-
-  const nodeKey = Object.keys(event.data)[0];
-  const data = event.data[nodeKey];
-  if (!("messages" in data)) {
-    console.log("No messages found in data");
-    // messages were not updated, return.
-    return;
-  }
-
-  const { messages } = data;
-  const messagesArray = Array.isArray(messages) ? messages : [messages];
-  messagesArray.forEach((msg: any) => {
-    handleExtractingMessageUpdate(msg, setMessages);
+  const data = event.data;
+  setMessages((prevMessages) => {
+    return [
+      ...prevMessages,
+      { rawResponse: data, sender: "ai", id: data.run_id },
+    ];
   });
 };
 
@@ -204,60 +204,11 @@ const handleStreamValuesEvent = (
     // Not an update, return
     return;
   }
-
-  event.data.messages.forEach((msg: any) => {
-    handleExtractingMessageUpdate(msg, setMessages);
+  const data = event.data;
+  setMessages((prevMessages) => {
+    return [
+      ...prevMessages,
+      { rawResponse: data, sender: "ai", id: data.run_id },
+    ];
   });
-};
-
-const handleExtractingMessageUpdate = (
-  message: any,
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
-) => {
-  if (message.type === "tool") {
-    const toolCallId = message.tool_call_id;
-    // Search for the message that the tool call is associated with, and update the `result` field of the tool call
-    setMessages((prevMessages) => {
-      const newMessages = prevMessages.map((prevMsg: any) => {
-        if (
-          "toolCalls" in prevMsg &&
-          Array.isArray(prevMsg.toolCalls) &&
-          prevMsg.toolCalls?.length &&
-          prevMsg.toolCalls.find((tc: ToolCall) => tc.id === toolCallId)
-        ) {
-          return {
-            ...prevMsg,
-            toolCalls: prevMsg.toolCalls.map((tc: ToolCall) => {
-              if (tc.id === toolCallId) {
-                return {
-                  ...tc,
-                  result: message.content,
-                };
-              } else {
-                return tc;
-              }
-            }),
-          };
-        }
-        return prevMsg;
-      });
-      return newMessages;
-    });
-  } else if (message.type === "ai") {
-    setMessages((prevMessages) => {
-      if (prevMessages.find((m) => m.id === message.id)) {
-        return prevMessages;
-      } else {
-        return [
-          ...prevMessages,
-          {
-            text: message.content,
-            sender: "ai",
-            toolCalls: message.tool_calls,
-            id: message.id,
-          },
-        ];
-      }
-    });
-  }
 };

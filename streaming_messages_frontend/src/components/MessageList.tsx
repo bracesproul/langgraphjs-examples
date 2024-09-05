@@ -7,6 +7,7 @@ export default function MessageList({ messages }: { messages: MessageType[] }) {
       {messages.map((message, index) => (
         <div key={index}>
           <Message
+            rawResponse={message.rawResponse}
             text={message.text}
             sender={message.sender}
             toolCalls={message.toolCalls}

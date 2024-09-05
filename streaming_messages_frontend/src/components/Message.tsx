@@ -1,14 +1,20 @@
 import Markdown from "react-markdown";
 import ToolCall from "./ToolCall";
 import { ToolCall as ToolCallType } from "../types";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+
+// Throws build errors if we try to import this normally
+const ReactJson = dynamic(() => import("react-json-view"), { ssr: false });
 
 export default function Message({
   text,
+  rawResponse,
   sender,
   toolCalls,
 }: {
-  text: string;
+  text?: string;
+  rawResponse?: Record<string, any>;
   sender: string;
   toolCalls?: ToolCallType[];
 }) {
@@ -18,6 +24,34 @@ export default function Message({
   useEffect(() => {
     setIsVisible(true);
   }, []);
+
+  let messageContent: React.ReactNode;
+  if (rawResponse) {
+    console.log("rendering", rawResponse);
+    messageContent = (
+      <ReactJson
+        displayObjectSize={false}
+        style={{ backgroundColor: "transparent" }}
+        displayDataTypes={false}
+        quotesOnKeys={false}
+        enableClipboard={false}
+        name={false}
+        src={rawResponse}
+        theme="tomorrow"
+      />
+    );
+  } else {
+    messageContent = (
+      <>
+        {toolCalls &&
+          toolCalls.length > 0 &&
+          toolCalls.map((toolCall) => (
+            <ToolCall key={toolCall.id} {...toolCall} />
+          ))}
+        {isBot ? <Markdown>{text}</Markdown> : text}
+      </>
+    );
+  }
 
   return (
     <div
@@ -42,12 +76,7 @@ export default function Message({
             : "mt-10 max-w-md text-gray-200 opacity-90"
         }`}
       >
-        {toolCalls &&
-          toolCalls.length > 0 &&
-          toolCalls.map((toolCall) => (
-            <ToolCall key={toolCall.id} {...toolCall} />
-          ))}
-        {isBot ? <Markdown>{text}</Markdown> : text}
+        {messageContent}
       </div>
     </div>
   );

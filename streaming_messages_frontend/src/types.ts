@@ -1,6 +1,7 @@
 export type Message = {
   id: string;
-  text: string;
+  text?: string;
+  rawResponse?: Record<string, any>;
   sender: string;
   toolCalls?: ToolCall[];
 };
