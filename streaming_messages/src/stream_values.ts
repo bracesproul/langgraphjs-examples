@@ -1,19 +1,5 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { logValuesEvent } from "utils.js";
-/**
- * Stream Values
- *
- * What is it:
- * The "values" stream mode will stream back the thread state any time it changes.
- * This means anytime the thread state is updated, or appended to, it is streamed
- * back to the client.
- *
- * When should you use it:
- * When your application needs to know the current state of the thread, and be
- * updated whenever it changes. For example, this is useful if building a system
- * which is constantly updating it the background, and the client needs to always
- * know the current state.
- */
 
 const client = new Client({
   apiKey: process.env.LANGCHAIN_API_KEY,

@@ -1,19 +1,5 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { logMessageEvent } from "utils.js";
-/**
- * Stream Messages
- *
- * What is it:
- * The "messages" stream mode will stream back chat messages from the
- * thread state and calls to chat models, token-by-token where possible.
- * This means every time the thread state is updated with a chat message,
- * it is streamed back to the client.
- *
- * When should you use it:
- * This streaming mode should be used in most chatbot applications, where
- * you have chat messages going back and forth between the user and the
- * assistant.
- */
 
 const client = new Client({
   apiKey: process.env.LANGCHAIN_API_KEY,
