@@ -20,7 +20,7 @@ The stockbroker agent is publicly accessible through two interfaces:
 >
 > You can access, and interact with it [here](https://stockbrokeragent-bracesprouls-projects.vercel.app).
 
-## YouTube Video (Coming soon)
+## [YouTube Video](https://youtu.be/td7qNK8_H-0)
 
 ## Setup
 
@@ -68,6 +68,7 @@ Then, set the variables in a `.env` file inside [`./frontend`](./frontend):
 # Only required for production deployments
 # LANGCHAIN_API_KEY=YOUR_API_KEY
 LANGGRAPH_API_URL=http://localhost:51497
+NEXT_PUBLIC_API_URL=http://localhost:3000/api # Or your production URL + /api
 NEXT_PUBLIC_LANGGRAPH_GRAPH_ID=stockbroker
 ```
 
