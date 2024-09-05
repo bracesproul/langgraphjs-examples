@@ -27,7 +27,7 @@ NEXT_PUBLIC_LANGGRAPH_GRAPH_ID=YOUR_GRAPH_ID
 
 ## Message Types
 
-### Stream Events
+### `events`
 The "events" stream mode is the most comprehensive streaming mode. It streams back every single event yielded by the run, including:
 - Each token yielded by a chat model
 - When model invocation starts and stops
@@ -35,7 +35,7 @@ The "events" stream mode is the most comprehensive streaming mode. It streams ba
 
 **Use case:** When you need the most fine-grained control over all events in your run. Ideal for generative UI applications where it's crucial to know when events start, stop, and the data in between for updating the UI.
 
-### Stream Messages
+### `messages`
 The "messages" stream mode focuses on chat messages. It streams:
 - Chat messages from the thread state
 - Calls to chat models, token-by-token where possible
@@ -43,14 +43,14 @@ The "messages" stream mode focuses on chat messages. It streams:
 
 **Use case:** Best for most chatbot applications where chat messages are exchanged between the user and the assistant.
 
-### Stream Updates
+### `updates`
 The "updates" stream mode is selective in what it returns. It streams:
 - Only the updates returned from a node
 - Specific key updates, not the entire thread state
 
 **Use case:** Ideal when your client needs to know only the updates made. For example, in a notification system where only the changes are important.
 
-### Stream Values
+### `values`
 The "values" stream mode provides a comprehensive view of the thread state. It streams:
 - The entire thread state any time it changes
 - Updates or additions to the thread state
