@@ -35,8 +35,11 @@ export default function ChatInterface() {
   const messageListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const initializeChat = async () => {
       let assistantId = getCookie(ASSISTANT_ID_COOKIE);
+
       if (!assistantId) {
         const assistant = await createAssistant(
           process.env.NEXT_PUBLIC_LANGGRAPH_GRAPH_ID as string
@@ -44,12 +47,15 @@ export default function ChatInterface() {
         assistantId = assistant.assistant_id as string;
         setCookie(ASSISTANT_ID_COOKIE, assistantId);
         setAssistantId(assistantId);
+        // Use the assistant ID as the user ID.
+        setUserId(assistantId);
+      } else {
+        setUserId(assistantId);
       }
 
       const { thread_id } = await createThread();
       setThreadId(thread_id);
       setAssistantId(assistantId);
-      setUserId(uuidv4());
     };
 
     initializeChat();
