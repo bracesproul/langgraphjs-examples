@@ -14,7 +14,7 @@ import {
   getThreadState,
   sendMessage,
 } from "../utils/chatApi";
-import { ASSISTANT_ID_COOKIE, USER_ID_COOKIE } from "@/constants";
+import { ASSISTANT_ID_COOKIE } from "@/constants";
 import { getCookie, setCookie } from "@/utils/cookies";
 import { ThreadState } from "@langchain/langgraph-sdk";
 import { GraphInterrupt } from "./Interrupted";
@@ -36,7 +36,7 @@ export default function ChatInterface() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-  
+
     const initializeChat = async () => {
       let assistantId = getCookie(ASSISTANT_ID_COOKIE);
 
@@ -49,7 +49,6 @@ export default function ChatInterface() {
         setAssistantId(assistantId);
         // Use the assistant ID as the user ID.
         setUserId(assistantId);
-        setCookie(USER_ID_COOKIE, assistantId);
       } else {
         setUserId(assistantId);
       }
