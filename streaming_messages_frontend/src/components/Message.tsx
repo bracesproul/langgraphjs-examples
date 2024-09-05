@@ -27,7 +27,6 @@ export default function Message({
 
   let messageContent: React.ReactNode;
   if (rawResponse) {
-    console.log("rendering", rawResponse);
     messageContent = (
       <ReactJson
         displayObjectSize={false}

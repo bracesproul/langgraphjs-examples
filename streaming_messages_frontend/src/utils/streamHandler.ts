@@ -182,7 +182,6 @@ const handleStreamUpdatesEvent = (
   event: any,
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 ) => {
-  console.log("update received", event);
   if (event.event !== "updates") {
     // Not an update, return
     return;
