@@ -3,7 +3,7 @@
 This project contains four TypeScript files, each containing calls to a LangGraph Cloud deployment, demonstrating the different ways to stream messages and data from the server to the client.
 This ranges from streaming only messages updated in the state, to streaming every event which occurs throughout the duration of your run.
 
-## YouTube Video (Coming soon)
+## [YouTube Video](https://youtu.be/wjn5tFbLgwA)
 
 ## Setup
 
