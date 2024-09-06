@@ -3,7 +3,7 @@
 This project contains a Next.js app, with API routes to hit a LangGraph Cloud deployment and demonstrate exactly how the different streaming types work.
 To change the streaming type, click on the settings (⚙️) icon in the top right corner of the app and select the desired streaming type.
 
-## YouTube Video (Coming soon)
+## [YouTube Video](https://youtu.be/wjn5tFbLgwA)
 
 ## Setup
 
