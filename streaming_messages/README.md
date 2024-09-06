@@ -3,6 +3,12 @@
 This project contains four TypeScript files, each containing calls to a LangGraph Cloud deployment, demonstrating the different ways to stream messages and data from the server to the client.
 This ranges from streaming only messages updated in the state, to streaming every event which occurs throughout the duration of your run.
 
+This repository contains two directories: `runnable` and `langgraph_sdk`.
+
+The `runnable` directory contains a simple LangGraph implementation, and files to stream that graph using runnable code.
+
+The `langgraph_sdk` contains code to invoke a deployed LangGraph Cloud instance using the LangChain SDK.
+
 ## [YouTube Video](https://youtu.be/wjn5tFbLgwA)
 
 ## Setup
