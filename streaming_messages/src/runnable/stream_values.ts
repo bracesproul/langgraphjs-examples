@@ -9,7 +9,7 @@ const input = {
 
 const config = {
   configurable: {
-    thread_id: "stream_events",
+    thread_id: "stream_values",
   },
   streamMode: "values" as const,
 };
