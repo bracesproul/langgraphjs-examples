@@ -3,7 +3,7 @@
   "dockerfile_lines": [],
   "dependencies": ["."],
   "graphs": {
-    "human_in_the_loop": "./src/human_in_the_loop.ts:graph"
+    "streaming_messages": "./src/runnable/graph.ts:graph"
   },
   "env": ".env"
 }
