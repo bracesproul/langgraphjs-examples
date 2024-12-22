@@ -1,5 +1,5 @@
 import { StreamMode } from "@/components/Settings";
-import { ThreadState, Client } from "@langchain/langgraph-sdk";
+import { type Command, ThreadState, Client } from "@langchain/langgraph-sdk";
 
 const createClient = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
@@ -48,6 +48,7 @@ export const sendMessage = async (params: {
   userId: string;
   systemInstructions: string;
   streamMode: StreamMode;
+  command?: Command; // Add this line
 }) => {
   const client = createClient();
 
@@ -74,6 +75,7 @@ export const sendMessage = async (params: {
   return client.runs.stream(params.threadId, params.assistantId, {
     input,
     config,
+    command: params.command, // Add this line
     streamMode: params.streamMode,
   });
 };

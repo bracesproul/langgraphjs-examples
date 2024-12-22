@@ -1,29 +1,25 @@
-import { updateState } from "@/utils/chatApi";
-import { ThreadState } from "@langchain/langgraph-sdk";
+import { type Command, ThreadState } from "@langchain/langgraph-sdk";
 import { useState } from "react";
 
 export interface GraphInterruptProps {
   threadId: string;
+  assistantId: string;
   state: ThreadState<Record<string, any>>;
-  setAllowNullMessage: (value: boolean) => void;
+  handleSendMessage: (message: string | null, command?: Command) => void; // Add this line
 }
 
 export function GraphInterrupt(props: GraphInterruptProps) {
   const [newState, setNewState] = useState<Record<string, any>>({});
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [isValidJson, setIsValidJson] = useState(true);
-  const [asNode, setAsNode] = useState(props.state.next[0]);
   const [stateUpdated, setStateUpdated] = useState(false);
 
   async function callUpdateState() {
     setButtonDisabled(true);
-    await updateState(props.threadId, {
-      newState,
-      asNode,
-    });
+    // Pass the command up to ChatInterface
+    props.handleSendMessage(null, { resume: newState });
     setButtonDisabled(false);
     setStateUpdated(true);
-    props.setAllowNullMessage(true);
   }
 
   if (stateUpdated) {
@@ -57,21 +53,12 @@ export function GraphInterrupt(props: GraphInterruptProps) {
           className="bg-gray-800 text-white px-4 py-2 rounded-lg mt-2"
         />
         {!isValidJson && <p className="text-red-500">Invalid JSON</p>}
-        <label htmlFor="asNode" className="text-gray-200">
-          As Node:
-        </label>
-        <input
-          value={asNode}
-          onChange={(e) => setAsNode(e.target.value)}
-          id="asNode"
-          className="bg-gray-800 text-white px-4 py-2 rounded-lg mt-2"
-        />
         <button
           onClick={callUpdateState}
           disabled={buttonDisabled}
           className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2"
         >
-          Update State
+          Resume
         </button>
       </div>
     </div>

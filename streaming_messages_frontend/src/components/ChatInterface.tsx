@@ -16,7 +16,7 @@ import {
 } from "../utils/chatApi";
 import { ASSISTANT_ID_COOKIE } from "@/constants";
 import { getCookie, setCookie } from "@/utils/cookies";
-import { ThreadState } from "@langchain/langgraph-sdk";
+import { type Command, ThreadState } from "@langchain/langgraph-sdk";
 import { GraphInterrupt } from "./Interrupted";
 
 export default function ChatInterface() {
@@ -31,7 +31,6 @@ export default function ChatInterface() {
   const [threadState, setThreadState] =
     useState<ThreadState<Record<string, any>>>();
   const [graphInterrupted, setGraphInterrupted] = useState(false);
-  const [allowNullMessage, setAllowNullMessage] = useState(false);
 
   const messageListRef = useRef<HTMLDivElement>(null);
 
@@ -62,12 +61,17 @@ export default function ChatInterface() {
     }
   }, [messages]);
 
-  const handleSendMessage = async (message: string | null) => {
+  const handleSendMessage = async (message: string | null, command?: Command) => {
     const messageId = uuidv4();
     if (message !== null) {
       setMessages([
         ...messages,
         { text: message, sender: "user", id: messageId },
+      ]);
+    } else if (command) {
+      setMessages([
+        ...messages,
+        { text: command.resume as string, sender: "user", id: messageId },
       ]);
     }
 
@@ -84,7 +88,6 @@ export default function ChatInterface() {
       setIsLoading(true);
       setThreadState(undefined);
       setGraphInterrupted(false);
-      setAllowNullMessage(false);
       const response = await sendMessage({
         threadId,
         assistantId,
@@ -94,6 +97,7 @@ export default function ChatInterface() {
         userId,
         systemInstructions,
         streamMode,
+        command
       });
 
       for await (const chunk of response) {
@@ -128,26 +132,16 @@ export default function ChatInterface() {
       ) : (
         <div ref={messageListRef} className="overflow-y-auto h-screen">
           <MessageList messages={messages} />
-          {!!graphInterrupted && !!threadState && !!threadId ? (
+          {!!graphInterrupted && !!threadState && !!threadId && !!assistantId ? (
             <div className="flex items-center justify-start w-2/3 mx-auto">
               <GraphInterrupt
-                setAllowNullMessage={setAllowNullMessage}
+                handleSendMessage={handleSendMessage}
                 threadId={threadId}
+                assistantId={assistantId}
                 state={threadState}
               />
             </div>
           ) : null}
-          {allowNullMessage && (
-            <div className="flex flex-col w-2/3 mx-auto overflow-y-scroll pb-[100px]">
-              <button
-                onClick={async () => handleSendMessage(null)}
-                disabled={isLoading}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 max-w-[400px] mx-auto"
-              >
-                Continue
-              </button>
-            </div>
-          )}
         </div>
       )}
       <InputArea onSendMessage={handleSendMessage} />
